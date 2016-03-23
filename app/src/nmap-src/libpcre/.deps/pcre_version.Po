@@ -1,0 +1,124 @@
+pcre_version.o: pcre_version.c config.h pcre_internal.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/ctype.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/cdefs.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/cdefs_elf.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/android/api-level.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/xlocale.h \
+ /home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include-fixed/limits.h \
+ /home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include-fixed/syslimits.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/limits.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/limits.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/limits.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/syslimits.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/setjmp.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/machine/setjmp.h \
+ /home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include/stdarg.h \
+ /home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include/stddef.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/stdio.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/types.h \
+ /home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include/stdint.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/stdint.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/machine/wchar_limits.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/types.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm/types.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/types.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/int-ll64.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm/bitsperlong.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/bitsperlong.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/posix_types.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/stddef.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/compiler.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm/posix_types.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/posix_types.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/sysmacros.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/stdlib.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/string.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/malloc.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/alloca.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/strings.h \
+ /home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/memory.h \
+ pcre.h ucp.h
+
+config.h:
+
+pcre_internal.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/ctype.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/cdefs.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/cdefs_elf.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/android/api-level.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/xlocale.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include-fixed/limits.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include-fixed/syslimits.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/limits.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/limits.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/limits.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/syslimits.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/setjmp.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/machine/setjmp.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include/stdarg.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include/stddef.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/stdio.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/types.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/lib/gcc/arm-linux-androideabi/4.9/include/stdint.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/stdint.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/machine/wchar_limits.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/types.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm/types.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/types.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/int-ll64.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm/bitsperlong.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/bitsperlong.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/posix_types.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/stddef.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/linux/compiler.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm/posix_types.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/asm-generic/posix_types.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/sys/sysmacros.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/stdlib.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/string.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/malloc.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/alloca.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/strings.h:
+
+/home/francesco/Dropbox/bin/android-toolchain/sysroot/usr/include/memory.h:
+
+pcre.h:
+
+ucp.h:

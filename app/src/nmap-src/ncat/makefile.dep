@@ -1,0 +1,52 @@
+ncat_main.o: ncat_main.c ../nsock/include/nsock.h \
+ ../nsock/include/nsock_config.h ncat.h ncat_config.h config.h \
+ ../nbase/nbase.h ../nbase/nbase_config.h ../nbase/nbase_ipv6.h util.h \
+ sockaddr_u.h sys_wrap.h ncat_connect.h ncat_core.h ncat_exec.h \
+ ncat_listen.h ncat_proxy.h ncat_ssl.h
+ncat_connect.o: ncat_connect.c base64.h ../nsock/include/nsock.h \
+ ../nsock/include/nsock_config.h ncat.h ncat_config.h config.h \
+ ../nbase/nbase.h ../nbase/nbase_config.h ../nbase/nbase_ipv6.h util.h \
+ sockaddr_u.h sys_wrap.h ncat_connect.h ncat_core.h ncat_exec.h \
+ ncat_listen.h ncat_proxy.h ncat_ssl.h http.h
+ncat_core.o: ncat_core.c ncat.h ncat_config.h config.h ../nbase/nbase.h \
+ ../nbase/nbase_config.h ../nbase/nbase_ipv6.h ../nsock/include/nsock.h \
+ ../nsock/include/nsock_config.h util.h sockaddr_u.h sys_wrap.h \
+ ncat_connect.h ncat_core.h ncat_exec.h ncat_listen.h ncat_proxy.h \
+ ncat_ssl.h
+ncat_posix.o: ncat_posix.c ncat.h ncat_config.h config.h ../nbase/nbase.h \
+ ../nbase/nbase_config.h ../nbase/nbase_ipv6.h ../nsock/include/nsock.h \
+ ../nsock/include/nsock_config.h util.h sockaddr_u.h sys_wrap.h \
+ ncat_connect.h ncat_core.h ncat_exec.h ncat_listen.h ncat_proxy.h \
+ ncat_ssl.h
+ncat_listen.o: ncat_listen.c ncat.h ncat_config.h config.h \
+ ../nbase/nbase.h ../nbase/nbase_config.h ../nbase/nbase_ipv6.h \
+ ../nsock/include/nsock.h ../nsock/include/nsock_config.h util.h \
+ sockaddr_u.h sys_wrap.h ncat_connect.h ncat_core.h ncat_exec.h \
+ ncat_listen.h ncat_proxy.h ncat_ssl.h
+ncat_proxy.o: ncat_proxy.c base64.h http.h ncat_config.h config.h util.h \
+ ../nbase/nbase.h ../nbase/nbase_config.h ../nbase/nbase_ipv6.h \
+ sockaddr_u.h ../nsock/include/nsock.h ../nsock/include/nsock_config.h \
+ ncat.h sys_wrap.h ncat_connect.h ncat_core.h ncat_exec.h ncat_listen.h \
+ ncat_proxy.h ncat_ssl.h
+ncat_ssl.o: ncat_ssl.c ../nbase/nbase.h ../nbase/nbase_config.h \
+ ../nbase/nbase_ipv6.h ncat_config.h config.h
+base64.o: base64.c base64.h ../nbase/nbase.h ../nbase/nbase_config.h \
+ ../nbase/nbase_ipv6.h
+http.o: http.c base64.h ncat.h ncat_config.h config.h ../nbase/nbase.h \
+ ../nbase/nbase_config.h ../nbase/nbase_ipv6.h ../nsock/include/nsock.h \
+ ../nsock/include/nsock_config.h util.h sockaddr_u.h sys_wrap.h \
+ ncat_connect.h ncat_core.h ncat_exec.h ncat_listen.h ncat_proxy.h \
+ ncat_ssl.h http.h
+util.o: util.c sys_wrap.h ../nbase/nbase.h ../nbase/nbase_config.h \
+ ../nbase/nbase_ipv6.h util.h ncat_config.h config.h sockaddr_u.h ncat.h \
+ ../nsock/include/nsock.h ../nsock/include/nsock_config.h ncat_connect.h \
+ ncat_core.h ncat_exec.h ncat_listen.h ncat_proxy.h ncat_ssl.h
+sys_wrap.o: sys_wrap.c sys_wrap.h ../nbase/nbase.h \
+ ../nbase/nbase_config.h ../nbase/nbase_ipv6.h util.h ncat_config.h \
+ config.h sockaddr_u.h
+ncat_lua.o: ncat_lua.c ncat.h ncat_config.h config.h ../nbase/nbase.h \
+ ../nbase/nbase_config.h ../nbase/nbase_ipv6.h ../nsock/include/nsock.h \
+ ../nsock/include/nsock_config.h util.h sockaddr_u.h sys_wrap.h \
+ ncat_connect.h ncat_core.h ncat_exec.h ncat_listen.h ncat_proxy.h \
+ ncat_ssl.h ncat_lua.h ../liblua/lua.h ../liblua/luaconf.h \
+ ../liblua/lualib.h ../liblua/lua.h ../liblua/lauxlib.h

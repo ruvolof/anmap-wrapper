@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">ANmap</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_anmap">ANmap</string>
+
+    <string name="host_label">Host:</string>
+    <string name="scan_button">Scan</string>
+    <string name="no_host_set">No host has ben set.</string>
+</resources>
