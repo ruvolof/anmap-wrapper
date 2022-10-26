@@ -3,6 +3,7 @@ package com.werebug.anmapwrapper;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 
@@ -34,12 +35,29 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         }
     }
 
+    private class StartNmapScan extends AsyncTask<ArrayList<String>, String, String> {
+        @Override
+        protected String doInBackground(ArrayList<String>... argv) {
+            MainActivity.this.startScan(argv[0].toArray(new String[0]));
+            return null;
+        }
+    }
+
     static {
         System.loadLibrary("nmap-wrapper-lib");
     }
 
     private ActivityMainBinding binding;
-    private static final String NMAP_SERVICES_FILE = "nmap-services";
+    private static final String LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG";
+    private static final String[] NMAP_ASSETS = {"nmap-service-probes",
+                                                 "nmap-services",
+                                                 "nmap-protocols",
+                                                 "nmap-rpc",
+                                                 "nmap-mac-prefixes",
+                                                 "nmap-os-db"};
+
+    public native void startScan(String[] argv);
+    public native String readNmapOutputStream();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,24 +67,24 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         setContentView(binding.getRoot());
         binding.startScanButton.setOnClickListener(this);
 
-        checkAndInstallNmapServices();
+        checkAndInstallNmapAssets();
     }
-
-    public native void startScan(String[] argv);
-    public native String readNmapOutputStream();
 
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.start_scan_button) {
             ArrayList<String> argv = new ArrayList<String>(Arrays.asList(String.valueOf(
                     binding.nmapCommandInput.getText()).split(" ")));
+            if (!argv.get(0).equals("nmap")) {
+                argv.add(0, "nmap");
+            }
             argv.add("--datadir");
             argv.add(String.valueOf(getFilesDir()));
             if (!argv.contains("--dns-servers")) {
                 argv.add("--dns-servers");
                 argv.add("8.8.8.8");
             }
-            startScan(argv.toArray(new String[0]));
+            new StartNmapScan().execute(argv);
             binding.outputTextView.setText("");
             new ReadNmapOutput().execute();
         }
@@ -79,37 +97,34 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         }
     }
 
-    private void checkAndInstallNmapServices() {
-        File nmap_services = getFileStreamPath(NMAP_SERVICES_FILE);
-        if (Objects.requireNonNull(nmap_services).exists()) {
-            return;
-        }
-        BufferedReader nmap_services_asset = null;
-        BufferedWriter nmap_services_local = null;
-        try {
-            nmap_services_asset = new BufferedReader(
-                    new InputStreamReader(getAssets().open(NMAP_SERVICES_FILE)));
-            nmap_services_local = new BufferedWriter(
-                    new OutputStreamWriter(openFileOutput(NMAP_SERVICES_FILE,
-                                                          Context.MODE_PRIVATE)));
-            String line = null;
-            while ((line = nmap_services_asset.readLine()) != null) {
-                nmap_services_local.write(line + "\n");
+    private void checkAndInstallNmapAssets() {
+        for (String nmapAsset : NMAP_ASSETS) {
+            File nmap_services = getFileStreamPath(nmapAsset);
+            if (Objects.requireNonNull(nmap_services).exists()) {
+                continue;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
+            BufferedReader asset_reader = null;
+            BufferedWriter local_copy_writer = null;
             try {
-                Objects.requireNonNull(nmap_services_asset).close();
+                asset_reader = new BufferedReader(
+                        new InputStreamReader(getAssets().open(nmapAsset)));
+                local_copy_writer = new BufferedWriter(
+                        new OutputStreamWriter(openFileOutput(nmapAsset, Context.MODE_PRIVATE)));
+                String line = null;
+                while ((line = asset_reader.readLine()) != null) {
+                    local_copy_writer.write(line + "\n");
+                }
+                Log.d(LOG_TAG, nmapAsset + " imported.");
             } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                Objects.requireNonNull(nmap_services_local).close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, "Error importing " + nmapAsset + ".");
+            } finally {
+                try {
+                    Objects.requireNonNull(asset_reader).close();
+                } catch (IOException e) { }
+                try {
+                    Objects.requireNonNull(local_copy_writer).close();
+                } catch (IOException e) { }
             }
         }
-
     }
 }
