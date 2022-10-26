@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="namp_services_not_found">nmap-services: not found</string>
-    <string name="nmap_services_found">nmap-services: found</string>
-    <string name="nmap_services_no_assets">nmap-services: assets missing.</string>
-    <string name="nmap_services_stored">nmap-services: stored on internal storage</string>
-    <string name="nmap_argv_creation">Calling nmap_main with following parameters:</string>
-    <string name="trash_stdout_remove">Removed from output:</string>
-</resources>
