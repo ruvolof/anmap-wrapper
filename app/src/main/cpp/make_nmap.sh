@@ -2,9 +2,17 @@
 
 NMAP_VERSION='7.93'
 NMAP_SRC="nmap-${NMAP_VERSION}.tgz"
+NMAP_DOWNLOAD_URL="https://nmap.org/dist/${NMAP_SRC}"
 NMAP_BUILD_DIR="nmap-${NMAP_VERSION}"
 NDK="/home/${USER}/Android/Sdk/ndk/25.1.8937393"
 HOST_ARCH='linux-x86_64'
+
+NMAP_ASSETS=('nmap-service-probes'
+             'nmap-services'
+             'nmap-protocols'
+             'nmap-rpc'
+             'nmap-mac-prefixes'
+             'nmap-os-db')
 
 declare -A ANDROID_TARGETS_ABI=(['aarch64-linux-android']='arm64-v8a' \
                                 ['armv7a-linux-androideabi']='armeabi-v7a')
@@ -29,7 +37,7 @@ function export_make_toolchain() {
 
 # Initializes the folder structure for libraries.
 function create_lib_folders() {
-  mkdir -p 'libs'
+  rm -rf libs
   for target in "${!ANDROID_TARGETS_ABI[@]}"; do
     mkdir -p "libs/${ANDROID_TARGETS_ABI[$target]}"
   done
@@ -37,6 +45,9 @@ function create_lib_folders() {
 
 # Extracts Nmap source. Removes it before, if it already exists.
 function prepare_source() {
+  if ! [[ -f "${NMAP_SRC}" ]]; then
+    wget "${NMAP_DOWNLOAD_URL}" -O "${NMAP_SRC}"
+  fi
   rm -rf "${NMAP_BUILD_DIR}"
   tar -xzf "${NMAP_SRC}"
 }
@@ -111,6 +122,12 @@ function cross_compile_nmap() {
            ./liblinear/liblinear.a
 }
 
+function import_nmap_assets_in_android_project() {
+  for asset in "${NMAP_ASSETS[@]}"; do
+    cp "${NMAP_BUILD_DIR}/${asset}" ../assets/"${asset}"
+  done
+}
+
 function main() {
   create_lib_folders
   for target in "${!ANDROID_TARGETS_ABI[@]}"; do
@@ -119,6 +136,7 @@ function main() {
     cross_compile_nmap "${target}"
     cd ..
   done
+  import_nmap_assets_in_android_project
 }
 
 main "$@"
