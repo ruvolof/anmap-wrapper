@@ -84,16 +84,17 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 argv.add("--dns-servers");
                 argv.add("8.8.8.8");
             }
-            new StartNmapScan().execute(argv);
+            new StartNmapScan().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, argv);
             binding.outputTextView.setText("");
-            new ReadNmapOutput().execute();
+            new ReadNmapOutput().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     }
 
     private void updateOutputView(String retrieved_output) {
         if (!retrieved_output.equals("NMAP_END")) {
-            binding.outputTextView.setText(binding.outputTextView.getText() + retrieved_output);
-            new ReadNmapOutput().execute();
+            binding.outputTextView.setText(
+                    String.format("%s%s", binding.outputTextView.getText(), retrieved_output));
+            new ReadNmapOutput().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     }
 

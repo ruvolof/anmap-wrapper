@@ -22,6 +22,14 @@ set_target_properties(
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_CURRENT_SOURCE_DIR}/libs/${ANDROID_ABI}/libnmap-lib.so)
 
+find_library(
+        log-lib
+        log )
+
 target_link_libraries(
         nmap-wrapper-lib
         nmap-lib)
+
+target_link_libraries(
+        nmap-wrapper-lib
+        ${log-lib})
