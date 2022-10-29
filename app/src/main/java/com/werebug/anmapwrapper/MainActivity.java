@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,29 +18,64 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
-    private class ReadNmapOutput extends AsyncTask<String, String, String> {
-        @Override
-        protected String doInBackground(String... strings) {
-            String retrieved_output = MainActivity.this.readNmapOutputStream();
-            return retrieved_output;
-        }
+    private static abstract class InnerAsyncTask<Input, Progress, Result>
+            extends AsyncTask<Input, Progress, Result> {
+        public WeakReference<MainActivity> mainActivityRef;
 
-        protected void onPostExecute(String retrieved_output) {
-            MainActivity.this.updateOutputView(retrieved_output);
+        InnerAsyncTask(MainActivity context) {
+            mainActivityRef = new WeakReference<>(context);
         }
     }
 
-    private class StartNmapScan extends AsyncTask<ArrayList<String>, String, String> {
+    private static class ReadNmapOutput extends InnerAsyncTask<String, String, String> {
+        ReadNmapOutput(MainActivity context) {
+            super(context);
+        }
+
         @Override
-        protected String doInBackground(ArrayList<String>... argv) {
-            MainActivity.this.startScan(argv[0].toArray(new String[0]));
+        protected String doInBackground(String... strings) {
+            return mainActivityRef.get().readNmapOutputStream();
+        }
+
+        @Override
+        protected void onPostExecute(String retrieved_output) {
+            mainActivityRef.get().updateOutputView(retrieved_output);
+        }
+    }
+
+    private static class StartNmapScan extends InnerAsyncTask<ArrayList<String>, Void, Void> {
+        StartNmapScan(MainActivity context) {
+            super(context);
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<String>... argv) {
+            mainActivityRef.get().startScan(argv[0].toArray(new String[0]));
             return null;
+        }
+    }
+
+    private static class StopNmapScan extends InnerAsyncTask<Void, Void, Void> {
+        StopNmapScan(MainActivity context) {
+            super(context);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            mainActivityRef.get().stopScan();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            Toast.makeText(mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -47,8 +83,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         System.loadLibrary("nmap-wrapper-lib");
     }
 
-    private ActivityMainBinding binding;
     private static final String LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG";
+    private static final String NMAP_END_TAG = "NMAP_END";
     private static final String[] NMAP_ASSETS = {"nmap-service-probes",
                                                  "nmap-services",
                                                  "nmap-protocols",
@@ -57,7 +93,11 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                                                  "nmap-os-db"};
 
     public native void startScan(String[] argv);
+    public native void stopScan();
     public native String readNmapOutputStream();
+
+    private ActivityMainBinding binding;
+    private boolean isScanning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,37 +105,9 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        binding.startScanButton.setOnClickListener(this);
+        binding.scanControlButton.setOnClickListener(this);
 
         checkAndInstallNmapAssets();
-    }
-
-    @Override
-    public void onClick(View view) {
-        if (view.getId() == R.id.start_scan_button) {
-            ArrayList<String> argv = new ArrayList<String>(Arrays.asList(String.valueOf(
-                    binding.nmapCommandInput.getText()).split(" ")));
-            if (!argv.get(0).equals("nmap")) {
-                argv.add(0, "nmap");
-            }
-            argv.add("--datadir");
-            argv.add(String.valueOf(getFilesDir()));
-            if (!argv.contains("--dns-servers")) {
-                argv.add("--dns-servers");
-                argv.add("8.8.8.8");
-            }
-            new StartNmapScan().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, argv);
-            binding.outputTextView.setText("");
-            new ReadNmapOutput().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
-    }
-
-    private void updateOutputView(String retrieved_output) {
-        if (!retrieved_output.equals("NMAP_END")) {
-            binding.outputTextView.setText(
-                    String.format("%s%s", binding.outputTextView.getText(), retrieved_output));
-            new ReadNmapOutput().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
     }
 
     private void checkAndInstallNmapAssets() {
@@ -121,11 +133,53 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             } finally {
                 try {
                     Objects.requireNonNull(asset_reader).close();
-                } catch (IOException e) { }
+                } catch (IOException ignored) { }
                 try {
                     Objects.requireNonNull(local_copy_writer).close();
-                } catch (IOException e) { }
+                } catch (IOException ignored) { }
             }
         }
+    }
+
+    private ArrayList<String> getNmapArgv() {
+        ArrayList<String> argv = new ArrayList<String>(Arrays.asList(String.valueOf(
+                binding.nmapCommandInput.getText()).split(" ")));
+        if (!argv.get(0).equals("nmap")) {
+            argv.add(0, "nmap");
+        }
+        argv.add("--datadir");
+        argv.add(String.valueOf(getFilesDir()));
+        if (!argv.contains("--dns-servers")) {
+            argv.add("--dns-servers");
+            argv.add("8.8.8.8");
+        }
+        return argv;
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.getId() == R.id.scan_control_button) {
+            if (isScanning) {
+                new StopNmapScan(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                return;
+            }
+            ArrayList<String> argv = getNmapArgv();
+            new StartNmapScan(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, argv);
+            isScanning = true;
+            binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause);
+            binding.outputTextView.setText("");
+            new ReadNmapOutput(this).execute();
+        }
+    }
+
+    private void updateOutputView(String retrieved_output) {
+        if (retrieved_output.equals("NMAP_END")) {
+            isScanning = false;
+            binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send);
+            return;
+        }
+        binding.outputTextView.setText(
+                String.format("%s%s", binding.outputTextView.getText(), retrieved_output));
+        new ReadNmapOutput(this).execute();
     }
 }

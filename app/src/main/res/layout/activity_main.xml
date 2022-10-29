@@ -7,7 +7,7 @@
     tools:context=".MainActivity">
 
     <ImageButton
-        android:id="@+id/start_scan_button"
+        android:id="@+id/scan_control_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -22,7 +22,7 @@
         android:inputType="textNoSuggestions"
         android:hint="@string/nmap_hint"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/start_scan_button"
+        app:layout_constraintEnd_toStartOf="@+id/scan_control_button"
         app:layout_constraintStart_toStartOf="parent" />
 
     <ScrollView

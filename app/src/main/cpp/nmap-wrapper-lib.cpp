@@ -12,6 +12,7 @@
 #define NMAP_END_TAG "NMAP_END"
 
 int pipes[2];
+pid_t scan_process_pid;
 
 class ExitTrapException : public std::runtime_error {
     public: explicit ExitTrapException(int status) : std::runtime_error(
@@ -24,10 +25,15 @@ extern "C" void exit(int status) {
 
 extern void set_program_name(const char* name);
 
+void flush_output_buffers() {
+    std::cout << std::flush;
+    std::cerr << std::flush;
+}
+
 void execNmapScan(int nmap_argc, char* nmap_argv[]) {
     pipe(pipes);
-    pid_t pid = fork();
-    if (pid == 0) {
+    scan_process_pid = fork();
+    if (scan_process_pid == 0) {
         close(pipes[0]);
         dup2(pipes[1], STDOUT_FILENO);
         dup2(pipes[1], STDERR_FILENO);
@@ -40,16 +46,18 @@ void execNmapScan(int nmap_argc, char* nmap_argv[]) {
             __android_log_print(ANDROID_LOG_DEBUG,
                                 LOG_TAG,
                                 "Exit call intercepted. Flushing buffers.");
-            std::cout << std::flush;
-            std::cerr << std::flush;
+            flush_output_buffers();
         }
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
         return;
     }
     close(pipes[1]);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_werebug_anmapwrapper_MainActivity_startScan(JNIEnv* env, jobject, jobjectArray argv) {
+Java_com_werebug_anmapwrapper_MainActivity_startScan(
+        JNIEnv* env, jobject, jobjectArray argv) {
     jsize nmap_argc = env->GetArrayLength(argv);
     char* nmap_argv[nmap_argc];
     for (int i = 0; i < nmap_argc; i++) {
@@ -57,6 +65,12 @@ Java_com_werebug_anmapwrapper_MainActivity_startScan(JNIEnv* env, jobject, jobje
         nmap_argv[i] = (char*)env->GetStringUTFChars(arg, 0);
     }
     execNmapScan(nmap_argc, nmap_argv);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_werebug_anmapwrapper_MainActivity_stopScan(JNIEnv* env, jobject) {
+    kill(scan_process_pid, SIGTERM);
+    waitpid(scan_process_pid, NULL, 0);
 }
 
 extern "C" JNIEXPORT jstring JNICALL
