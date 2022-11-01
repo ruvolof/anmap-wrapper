@@ -44,7 +44,8 @@
                 android:layout_height="match_parent"
                 android:padding="10dp"
                 android:text="@string/main_credits"
-                android:autoLink="web" />
+                android:autoLink="web"
+                android:textIsSelectable="true" />
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
