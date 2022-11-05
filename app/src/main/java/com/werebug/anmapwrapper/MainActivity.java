@@ -1,14 +1,16 @@
 package com.werebug.anmapwrapper;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.HandlerCompat;
 
 import com.werebug.anmapwrapper.databinding.ActivityMainBinding;
 
@@ -22,60 +24,56 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
-    private static abstract class InnerAsyncTask<Input, Progress, Result>
-            extends AsyncTask<Input, Progress, Result> {
-        public WeakReference<MainActivity> mainActivityRef;
+    private static class ReadNmapOutput implements Runnable {
+        private final WeakReference<MainActivity> mainActivityRef;
+        private final Handler mainThreadHandler;
 
-        InnerAsyncTask(MainActivity context) {
-            mainActivityRef = new WeakReference<>(context);
+        ReadNmapOutput(WeakReference<MainActivity> mainActivityRef, Handler mainThreadHandler) {
+            this.mainActivityRef = mainActivityRef;
+            this.mainThreadHandler = mainThreadHandler;
+        }
+
+        @Override
+        public void run() {
+            String nmapOutput = mainActivityRef.get().readNmapOutputStream();
+            mainThreadHandler.post(() -> mainActivityRef.get().updateOutputView(nmapOutput));
         }
     }
 
-    private static class ReadNmapOutput extends InnerAsyncTask<String, String, String> {
-        ReadNmapOutput(MainActivity context) {
-            super(context);
+    private static class StartNmapScan implements Runnable {
+        private final WeakReference<MainActivity> mainActivityRef;
+        private final ArrayList<String> argv;
+
+        StartNmapScan(WeakReference<MainActivity> mainActivityRef, ArrayList<String> argv) {
+            this.mainActivityRef = mainActivityRef;
+            this.argv = argv;
         }
 
         @Override
-        protected String doInBackground(String... strings) {
-            return mainActivityRef.get().readNmapOutputStream();
-        }
-
-        @Override
-        protected void onPostExecute(String retrieved_output) {
-            mainActivityRef.get().updateOutputView(retrieved_output);
+        public void run() {
+            mainActivityRef.get().startScan(argv.toArray(new String[0]));
         }
     }
 
-    private static class StartNmapScan extends InnerAsyncTask<ArrayList<String>, Void, Void> {
-        StartNmapScan(MainActivity context) {
-            super(context);
+    private static class StopNmapScan implements Runnable {
+        private final WeakReference<MainActivity> mainActivityRef;
+        private final Handler mainThreadHandler;
+
+        StopNmapScan(WeakReference<MainActivity> mainActivityRef, Handler mainThreadHandler) {
+            this.mainActivityRef = mainActivityRef;
+            this.mainThreadHandler = mainThreadHandler;
         }
 
         @Override
-        protected Void doInBackground(ArrayList<String>... argv) {
-            mainActivityRef.get().startScan(argv[0].toArray(new String[0]));
-            return null;
-        }
-    }
-
-    private static class StopNmapScan extends InnerAsyncTask<Void, Void, Void> {
-        StopNmapScan(MainActivity context) {
-            super(context);
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
+        public void run() {
             mainActivityRef.get().stopScan();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            Toast.makeText(mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show();
+            mainThreadHandler.post(() -> Toast.makeText(
+                    mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show());
         }
     }
 
@@ -98,6 +96,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     private ActivityMainBinding binding;
     private boolean isScanning = false;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private final Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                         new InputStreamReader(getAssets().open(nmapAsset)));
                 local_copy_writer = new BufferedWriter(
                         new OutputStreamWriter(openFileOutput(nmapAsset, Context.MODE_PRIVATE)));
-                String line = null;
+                String line;
                 while ((line = asset_reader.readLine()) != null) {
                     local_copy_writer.write(line + "\n");
                 }
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     }
 
     private ArrayList<String> getNmapArgv() {
-        ArrayList<String> argv = new ArrayList<String>(Arrays.asList(String.valueOf(
+        ArrayList<String> argv = new ArrayList<>(Arrays.asList(String.valueOf(
                 binding.nmapCommandInput.getText()).split(" ")));
         if (!argv.get(0).equals("nmap")) {
             argv.add(0, "nmap");
@@ -160,26 +160,29 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     public void onClick(View view) {
         if (view.getId() == R.id.scan_control_button) {
             if (isScanning) {
-                new StopNmapScan(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                executorService.execute(
+                        new StopNmapScan(new WeakReference<>(this), mainThreadHandler));
                 return;
             }
             ArrayList<String> argv = getNmapArgv();
-            new StartNmapScan(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, argv);
+            executorService.execute(new StartNmapScan(new WeakReference<>(this), argv));
             isScanning = true;
             binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause);
             binding.outputTextView.setText("");
-            new ReadNmapOutput(this).execute();
+            executorService.execute(
+                    new ReadNmapOutput(new WeakReference<>(this), mainThreadHandler));
         }
     }
 
     private void updateOutputView(String retrieved_output) {
-        if (retrieved_output.equals("NMAP_END")) {
+        if (retrieved_output.equals(NMAP_END_TAG)) {
             isScanning = false;
             binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send);
             return;
         }
         binding.outputTextView.setText(
                 String.format("%s%s", binding.outputTextView.getText(), retrieved_output));
-        new ReadNmapOutput(this).execute();
+        executorService.execute(
+                new ReadNmapOutput(new WeakReference<>(this), mainThreadHandler));
     }
 }
