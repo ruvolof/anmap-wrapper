@@ -3,11 +3,13 @@
 #include <iostream>
 #include <jni.h>
 #include <string>
+#include <sys/wait.h>
 #include <unistd.h>
 #include "nmap-7.93/nmap.h"
 
 #define LOG_TAG "ANMAPWRAPPER_CUSTOM_LOG_NDK"
-#define NMAP_END_TAG "NMAP_END"
+
+pid_t scan_process_pid;
 
 class ExitTrapException : public std::runtime_error {
     public: explicit ExitTrapException(int status) : std::runtime_error(
@@ -26,8 +28,10 @@ void flush_output_buffers() {
 }
 
 void execNmapScan(int nmap_argc, char* nmap_argv[], char* output_path) {
-    int saved_stdout = dup(STDOUT_FILENO);
-    int saved_stderr = dup(STDERR_FILENO);
+    scan_process_pid = fork();
+    if (scan_process_pid != 0) {
+        return;
+    }
     int fifo_fd = open(output_path, O_WRONLY);
     dup2(fifo_fd, STDOUT_FILENO);
     dup2(fifo_fd, STDERR_FILENO);
@@ -42,11 +46,8 @@ void execNmapScan(int nmap_argc, char* nmap_argv[], char* output_path) {
                             "Exit call intercepted. Flushing buffers.");
         flush_output_buffers();
     }
-
-    dup2(saved_stdout, STDOUT_FILENO);
-    dup2(saved_stderr, STDERR_FILENO);
-    close(saved_stdout);
-    close(saved_stderr);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -60,4 +61,10 @@ Java_com_werebug_anmapwrapper_MainActivity_startScan(
     }
     auto output_path = (char*)env->GetStringUTFChars(fifo_path, 0);
     execNmapScan(nmap_argc, nmap_argv, output_path);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_werebug_anmapwrapper_MainActivity_stopScan(JNIEnv* env, jobject) {
+    kill(scan_process_pid, SIGTERM);
+    waitpid(scan_process_pid, NULL, 0);
 }
