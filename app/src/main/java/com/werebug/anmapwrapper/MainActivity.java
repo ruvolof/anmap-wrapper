@@ -4,6 +4,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.system.ErrnoException;
+import android.system.Os;
+import android.system.OsConstants;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -17,15 +20,20 @@ import com.werebug.anmapwrapper.databinding.ActivityMainBinding;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
@@ -40,8 +48,21 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         @Override
         public void run() {
-            String nmapOutput = mainActivityRef.get().readNmapOutputStream();
-            mainThreadHandler.post(() -> mainActivityRef.get().updateOutputView(nmapOutput));
+            String fifoPath = mainActivityRef.get().fifoPath;
+            try {
+                BufferedReader pipeReader = new BufferedReader(new FileReader(fifoPath));
+                String line = pipeReader.readLine();
+                while (line != null) {
+                    String retrievedOutput = line + "\n";
+                    mainThreadHandler.post(
+                            () -> mainActivityRef.get().updateOutputView(retrievedOutput, false));
+                    line = pipeReader.readLine();
+                }
+                pipeReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mainActivityRef.get().updateOutputView("", true);
         }
     }
 
@@ -56,24 +77,19 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         @Override
         public void run() {
-            mainActivityRef.get().startScan(argv.toArray(new String[0]));
-        }
-    }
-
-    private static class StopNmapScan implements Runnable {
-        private final WeakReference<MainActivity> mainActivityRef;
-        private final Handler mainThreadHandler;
-
-        StopNmapScan(WeakReference<MainActivity> mainActivityRef, Handler mainThreadHandler) {
-            this.mainActivityRef = mainActivityRef;
-            this.mainThreadHandler = mainThreadHandler;
-        }
-
-        @Override
-        public void run() {
-            mainActivityRef.get().stopScan();
-            mainThreadHandler.post(() -> Toast.makeText(
-                    mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show());
+            File fifo = new File(mainActivityRef.get().fifoPath);
+            if (fifo.exists()) {
+                fifo.delete();
+            }
+            try {
+                Os.mkfifo(mainActivityRef.get().fifoPath,
+                          OsConstants.S_IRUSR | OsConstants.S_IWUSR);
+            } catch (ErrnoException e) {
+                e.printStackTrace();
+                return;
+            }
+            mainActivityRef.get().startScan(argv.toArray(new String[0]),
+                                            mainActivityRef.get().fifoPath);
         }
     }
 
@@ -81,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         System.loadLibrary("nmap-wrapper-lib");
     }
 
+    private static final String FIFO_NAME = "nmap_output_fifo";
     private static final String LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG";
     private static final String NMAP_END_TAG = "NMAP_END";
     private static final String[] NMAP_ASSETS = {"nmap-service-probes",
@@ -90,14 +107,14 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                                                  "nmap-mac-prefixes",
                                                  "nmap-os-db"};
 
-    public native void startScan(String[] argv);
-    public native void stopScan();
-    public native String readNmapOutputStream();
+    public native void startScan(String[] argv, String fifoPath);
 
     private ActivityMainBinding binding;
     private boolean isScanning = false;
+    private String fifoPath = null;
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
     private final Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+    private Future<?> currentStartRunnable = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         setContentView(binding.getRoot());
         binding.scanControlButton.setOnClickListener(this);
 
+        fifoPath = String.valueOf(getFilesDir()) + "/" + FIFO_NAME;
         checkAndInstallNmapAssets();
     }
 
@@ -147,11 +165,10 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         if (!argv.get(0).equals("nmap")) {
             argv.add(0, "nmap");
         }
-        argv.add("--datadir");
-        argv.add(String.valueOf(getFilesDir()));
+        Collections.addAll(argv, "--datadir", String.valueOf(getFilesDir()));
+        //Collections.addAll(argv, "-oN", fifoPath, "--append-output");
         if (!argv.contains("--dns-servers")) {
-            argv.add("--dns-servers");
-            argv.add("8.8.8.8");
+            Collections.addAll(argv, "--dns-servers", "8.8.8.8");
         }
         return argv;
     }
@@ -160,12 +177,15 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     public void onClick(View view) {
         if (view.getId() == R.id.scan_control_button) {
             if (isScanning) {
-                executorService.execute(
-                        new StopNmapScan(new WeakReference<>(this), mainThreadHandler));
+                if (!currentStartRunnable.cancel(true)) {
+                    Log.d(LOG_TAG, "Failed to stop.");
+                };
                 return;
             }
             ArrayList<String> argv = getNmapArgv();
-            executorService.execute(new StartNmapScan(new WeakReference<>(this), argv));
+            Log.d(LOG_TAG, String.valueOf(argv));
+            currentStartRunnable = executorService.submit(
+                    new StartNmapScan(new WeakReference<>(this), argv));
             isScanning = true;
             binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause);
             binding.outputTextView.setText("");
@@ -174,15 +194,12 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         }
     }
 
-    private void updateOutputView(String retrieved_output) {
-        if (retrieved_output.equals(NMAP_END_TAG)) {
+    private void updateOutputView(String retrieved_output, boolean finished) {
+        if (finished) {
             isScanning = false;
             binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send);
-            return;
         }
         binding.outputTextView.setText(
                 String.format("%s%s", binding.outputTextView.getText(), retrieved_output));
-        executorService.execute(
-                new ReadNmapOutput(new WeakReference<>(this), mainThreadHandler));
     }
 }
