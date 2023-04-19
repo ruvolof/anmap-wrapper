@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ANmap Wrapper</string>
+    <string name="app_name">Nmap Wrapper</string>
     <string name="nmap_hint">nmap -p 80 -sT 192.168.1.1</string>
     <string name="main_credits">Nmap Wrapper for Android\nCreated by Werebug (https://werebug.com)\n\nThis is an wrapper around the Nmap binary cross-compiled as a shared library for Android.\nThis is not an official Nmap application.\n\nNote: This application does not support rooted phones at the moment, therefore all Nmap features that need root rights will not work.\n\nSource code, cross-compilation instructions and configuration are available at https://github.com/ruvolof/anmap-wrapper. Feel free to contribute or report bugs on Github.</string>
 </resources>
