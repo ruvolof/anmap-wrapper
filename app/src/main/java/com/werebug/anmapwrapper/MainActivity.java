@@ -47,12 +47,10 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         private final String libDir;
         private boolean stopped = false;
 
-        StartNmapScan(WeakReference<MainActivity> mainActivityRef,
-                      Handler mainThreadHandler,
-                      ArrayList<String> command) {
+        StartNmapScan(WeakReference<MainActivity> mainActivityRef, ArrayList<String> command) {
             this.mainActivityRef = mainActivityRef;
-            this.mainThreadHandler = mainThreadHandler;
             this.command = command;
+            this.mainThreadHandler = this.mainActivityRef.get().mainThreadHandler;
             this.libDir = this.mainActivityRef.get().libDir;
         }
 
@@ -186,8 +184,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             }
             ArrayList<String> command = getNmapCommand();
             Log.d(LOG_TAG, String.valueOf(command));
-            currentNmapScan = new StartNmapScan(
-                    new WeakReference<>(this), mainThreadHandler, command);
+            currentNmapScan = new StartNmapScan(new WeakReference<>(this), command);
             executorService.execute(currentNmapScan);
         }
     }
