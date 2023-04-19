@@ -7,10 +7,9 @@ project("anmapwrapper")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nmap-7.93/)
 
-add_library(
-        nmap-wrapper-lib
-        SHARED
-        nmap-wrapper-lib.cpp)
+add_executable(
+        libnmap-wrapper.so
+        nmap-wrapper.cpp)
 
 add_library(
         nmap-lib
@@ -22,14 +21,6 @@ set_target_properties(
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_CURRENT_SOURCE_DIR}/libs/${ANDROID_ABI}/libnmap-lib.so)
 
-find_library(
-        log-lib
-        log )
-
 target_link_libraries(
-        nmap-wrapper-lib
+        libnmap-wrapper.so
         nmap-lib)
-
-target_link_libraries(
-        nmap-wrapper-lib
-        ${log-lib})

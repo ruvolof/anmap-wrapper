@@ -4,7 +4,7 @@ NMAP_VERSION='7.93'
 NMAP_SRC="nmap-${NMAP_VERSION}.tgz"
 NMAP_DOWNLOAD_URL="https://nmap.org/dist/${NMAP_SRC}"
 NMAP_BUILD_DIR="nmap-${NMAP_VERSION}"
-NDK="/home/${USER}/Android/Sdk/ndk/25.1.8937393"
+NDK="/home/${USER}/Android/Sdk/ndk/25.2.9519653"
 HOST_ARCH='linux-x86_64'
 
 NMAP_ASSETS=('nmap-service-probes'

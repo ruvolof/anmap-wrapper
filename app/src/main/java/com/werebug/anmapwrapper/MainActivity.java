@@ -23,13 +23,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,114 +40,95 @@ import java.util.concurrent.Future;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
-    private static class ReadNmapOutput implements Runnable {
-        private final WeakReference<MainActivity> mainActivityRef;
-        private final Handler mainThreadHandler;
-
-        ReadNmapOutput(WeakReference<MainActivity> mainActivityRef, Handler mainThreadHandler) {
-            this.mainActivityRef = mainActivityRef;
-            this.mainThreadHandler = mainThreadHandler;
-        }
-
-        @Override
-        public void run() {
-            String fifoPath = mainActivityRef.get().fifoPath;
-            BufferedReader pipeReader = null;
-            try {
-                pipeReader = new BufferedReader(new FileReader(fifoPath));
-                String line = pipeReader.readLine();
-                while (line != null) {
-                    String retrievedOutput = line + "\n";
-                    mainThreadHandler.post(
-                            () -> mainActivityRef.get().updateOutputView(retrievedOutput, false));
-                    line = pipeReader.readLine();
-                }
-                pipeReader.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    Objects.requireNonNull(pipeReader).close();
-                } catch (IOException ignored) {}
-                mainActivityRef.get().cleanUpFifo();
-            }
-            mainActivityRef.get().updateOutputView("", true);
-        }
-    }
-
     private static class StartNmapScan implements Runnable {
         private final WeakReference<MainActivity> mainActivityRef;
-        private final ArrayList<String> argv;
-
-        StartNmapScan(WeakReference<MainActivity> mainActivityRef, ArrayList<String> argv) {
-            this.mainActivityRef = mainActivityRef;
-            this.argv = argv;
-        }
-
-        @Override
-        public void run() {
-            mainActivityRef.get().cleanUpFifo();
-            try {
-                Os.mkfifo(mainActivityRef.get().fifoPath,
-                          OsConstants.S_IRUSR | OsConstants.S_IWUSR);
-            } catch (ErrnoException e) {
-                e.printStackTrace();
-                return;
-            }
-            mainActivityRef.get().startScan(argv.toArray(new String[0]),
-                                            mainActivityRef.get().fifoPath);
-        }
-    }
-
-    private static class StopNmapScan implements Runnable {
-        private final WeakReference<MainActivity> mainActivityRef;
         private final Handler mainThreadHandler;
+        private final ArrayList<String> command;
+        private final String libDir;
+        private boolean stopped = false;
 
-        StopNmapScan(WeakReference<MainActivity> mainActivityRef, Handler mainThreadHandler) {
+        StartNmapScan(WeakReference<MainActivity> mainActivityRef,
+                      Handler mainThreadHandler,
+                      ArrayList<String> command) {
             this.mainActivityRef = mainActivityRef;
             this.mainThreadHandler = mainThreadHandler;
+            this.command = command;
+            this.libDir = this.mainActivityRef.get().libDir;
         }
 
         @Override
         public void run() {
-            mainActivityRef.get().stopScan();
-            mainThreadHandler.post(() -> Toast.makeText(
-                    mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show());
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Map<String, String> processEnv = processBuilder.environment();
+            processEnv.put("LD_LIBRARY_PATH", libDir);
+            processBuilder.redirectErrorStream(true);
+            try {
+                Process process = processBuilder.start();
+                mainThreadHandler.post(() -> mainActivityRef.get().initScanView());
+                InputStream processStdout = process.getInputStream();
+                boolean exited = false;
+                while (!exited && !stopped) {
+                    int outputByteCount = processStdout.available();
+                    if (outputByteCount > 0) {
+                        byte[] bytes = new byte[outputByteCount];
+                        processStdout.read(bytes);
+                        mainThreadHandler.post(
+                                () -> mainActivityRef.get().updateOutputView(
+                                        new String(bytes, StandardCharsets.UTF_8), false)
+                        );
+                    }
+                    if (stopped) {
+                        process.destroy();
+                    }
+                    try {
+                        process.exitValue();
+                        exited = true;
+                    } catch (IllegalThreadStateException ignored) {}
+                }
+                if (stopped) {
+                    mainThreadHandler.post(
+                            () -> Toast.makeText(
+                                    mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show());
+                }
+                mainThreadHandler.post(
+                        () -> mainActivityRef.get().updateOutputView("", true));
+            } catch (IOException e) {
+                Log.e(LOG_TAG, e.getMessage());
+            }
+        }
+
+        public void stopScan() {
+            stopped = true;
         }
     }
 
-    static {
-        System.loadLibrary("nmap-wrapper-lib");
-    }
-
-    private static final String FIFO_NAME = "nmap_output_fifo";
     private static final String LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG";
-    private static final String NMAP_END_TAG = "NMAP_END";
     private static final String[] NMAP_ASSETS = {"nmap-service-probes",
                                                  "nmap-services",
                                                  "nmap-protocols",
                                                  "nmap-rpc",
                                                  "nmap-mac-prefixes",
                                                  "nmap-os-db"};
-
-    public native void startScan(String[] argv, String fifoPath);
-    public native void stopScan();
+    private final ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private final Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
 
     private ActivityMainBinding binding;
+    private String libDir;
+    private String nmapExecutablePath;
     private boolean isScanning = false;
-    private String fifoPath = null;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
-    private final Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+    private StartNmapScan currentNmapScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        libDir = getApplicationInfo().nativeLibraryDir;
+        nmapExecutablePath = libDir + "/libnmap-wrapper.so";
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         binding.scanControlButton.setOnClickListener(this);
 
-        fifoPath = String.valueOf(getFilesDir()) + "/" + FIFO_NAME;
         checkAndInstallNmapAssets();
     }
 
@@ -179,12 +163,13 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         }
     }
 
-    private ArrayList<String> getNmapArgv() {
+    private ArrayList<String> getNmapCommand() {
         ArrayList<String> argv = new ArrayList<>(Arrays.asList(String.valueOf(
                 binding.nmapCommandInput.getText()).split(" ")));
-        if (!argv.get(0).equals("nmap")) {
-            argv.add(0, "nmap");
+        if (argv.get(0).equals("nmap")) {
+            argv.remove(0);
         }
+        argv.add(0, nmapExecutablePath);
         Collections.addAll(argv, "--datadir", String.valueOf(getFilesDir()));
         if (!argv.contains("--dns-servers")) {
             Collections.addAll(argv, "--dns-servers", "8.8.8.8");
@@ -196,35 +181,30 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     public void onClick(View view) {
         if (view.getId() == R.id.scan_control_button) {
             if (isScanning) {
-                executorService.execute(
-                        new StopNmapScan(new WeakReference<>(this), mainThreadHandler));
+                currentNmapScan.stopScan();
                 return;
             }
-            ArrayList<String> argv = getNmapArgv();
-            Log.d(LOG_TAG, String.valueOf(argv));
-            executorService.execute(
-                    new StartNmapScan(new WeakReference<>(this), argv));
-            isScanning = true;
-            binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause);
-            binding.outputTextView.setText("");
-            executorService.execute(
-                    new ReadNmapOutput(new WeakReference<>(this), mainThreadHandler));
+            ArrayList<String> command = getNmapCommand();
+            Log.d(LOG_TAG, String.valueOf(command));
+            currentNmapScan = new StartNmapScan(
+                    new WeakReference<>(this), mainThreadHandler, command);
+            executorService.execute(currentNmapScan);
         }
+    }
+
+    private void initScanView() {
+        isScanning = true;
+        binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause);
+        binding.outputTextView.setText("");
     }
 
     private void updateOutputView(String retrieved_output, boolean finished) {
         if (finished) {
             isScanning = false;
+            currentNmapScan = null;
             binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send);
         }
         binding.outputTextView.setText(
                 String.format("%s%s", binding.outputTextView.getText(), retrieved_output));
-    }
-
-    private void cleanUpFifo() {
-        File fifo = new File(fifoPath);
-        if (fifo.exists()) {
-            fifo.delete();
-        }
     }
 }
