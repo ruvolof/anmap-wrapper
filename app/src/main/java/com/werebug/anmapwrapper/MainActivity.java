@@ -92,6 +92,9 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                         () -> mainActivityRef.get().updateOutputView("", true));
             } catch (IOException e) {
                 Log.e(LOG_TAG, e.getMessage());
+                mainThreadHandler.post(
+                        () -> Toast.makeText(
+                                mainActivityRef.get(), e.getMessage(), Toast.LENGTH_LONG).show());
             }
         }
 
@@ -161,13 +164,23 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         }
     }
 
-    private ArrayList<String> getNmapCommand() {
+    private ArrayList<String> getNmapCommand() throws Exception {
         ArrayList<String> argv = new ArrayList<>(Arrays.asList(String.valueOf(
                 binding.nmapCommandInput.getText()).split(" ")));
-        if (argv.get(0).equals("nmap")) {
-            argv.remove(0);
+        int isSudo = argv.indexOf("sudo");
+        if (isSudo > 0) {
+            throw new Exception(getString(R.string.invalid_sudo_syntax));
         }
-        argv.add(0, nmapExecutablePath);
+        if (isSudo == 0) {
+            argv.remove(0);
+            argv.addAll(0, Arrays.asList(new String[]{"su", "-c"}));
+        }
+        int nmapIndex = argv.indexOf("nmap");
+        if ((isSudo == -1 && nmapIndex != 0) || (isSudo == 0 && nmapIndex != 2)) {
+            throw new Exception(getString(R.string.invalid_nmap_syntax));
+        }
+        argv.remove(nmapIndex);
+        argv.add(nmapIndex, nmapExecutablePath);
         Collections.addAll(argv, "--datadir", String.valueOf(getFilesDir()));
         if (!argv.contains("--dns-servers")) {
             Collections.addAll(argv, "--dns-servers", "8.8.8.8");
@@ -182,7 +195,13 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 currentNmapScan.stopScan();
                 return;
             }
-            ArrayList<String> command = getNmapCommand();
+            ArrayList<String> command;
+            try {
+                command = getNmapCommand();
+            } catch (Exception e) {
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                return;
+            }
             Log.d(LOG_TAG, String.valueOf(command));
             currentNmapScan = new StartNmapScan(new WeakReference<>(this), command);
             executorService.execute(currentNmapScan);
