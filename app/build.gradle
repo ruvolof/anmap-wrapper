@@ -9,7 +9,7 @@ android {
         applicationId "com.werebug.anmapwrapper"
         minSdk 21
         targetSdk 33
-        versionCode 3
+        versionCode 4
         versionName "1.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -32,6 +32,11 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
     }
     externalNativeBuild {
         cmake {
