@@ -27,6 +27,6 @@ if you change the wrapper.
 ## TODO
 
 1) ~~Migrate from deprecated AsyncTask to Runnable.~~
-2) Explore options for IPC other than pipes and output redirection and remove ugly `fork()` in wrapper.
-3) Add root support.
+2) ~~Explore options for IPC other than pipes and output redirection and remove ugly `fork()` in wrapper.~~
+3) ~~Add root support.~~
 4) Add x86 and x86_64 support.
