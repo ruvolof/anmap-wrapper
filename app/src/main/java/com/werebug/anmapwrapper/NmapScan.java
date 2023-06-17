@@ -45,7 +45,7 @@ public class NmapScan implements Runnable {
                     byte[] bytes = new byte[outputByteCount];
                     processStdout.read(bytes);
                     mainThreadHandler.post(
-                            () -> mainActivityRef.get().updateOutputView(
+                            () -> safeUpdateOutputView(
                                     new String(bytes, StandardCharsets.UTF_8), false)
                     );
                 }
@@ -62,13 +62,19 @@ public class NmapScan implements Runnable {
                         () -> Toast.makeText(
                                 mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show());
             }
-            mainThreadHandler.post(
-                    () -> mainActivityRef.get().updateOutputView("", true));
+            mainThreadHandler.post(() -> safeUpdateOutputView("", true));
         } catch (IOException e) {
             Log.e(MainActivity.LOG_TAG, e.getMessage());
             mainThreadHandler.post(
                     () -> Toast.makeText(
                             mainActivityRef.get(), e.getMessage(), Toast.LENGTH_LONG).show());
+        }
+    }
+
+    private void safeUpdateOutputView(String message, boolean finished) {
+        MainActivity mainActivity = mainActivityRef.get();
+        if (mainActivity != null) {
+            mainActivity.updateOutputView(message, finished);
         }
     }
 
