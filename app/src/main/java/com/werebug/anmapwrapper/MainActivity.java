@@ -4,9 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.system.ErrnoException;
-import android.system.Os;
-import android.system.OsConstants;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,70 +37,7 @@ import java.util.concurrent.Future;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
-    private static class StartNmapScan implements Runnable {
-        private final WeakReference<MainActivity> mainActivityRef;
-        private final Handler mainThreadHandler;
-        private final ArrayList<String> command;
-        private final String libDir;
-        private boolean stopped = false;
-
-        StartNmapScan(WeakReference<MainActivity> mainActivityRef, ArrayList<String> command) {
-            this.mainActivityRef = mainActivityRef;
-            this.command = command;
-            this.mainThreadHandler = this.mainActivityRef.get().mainThreadHandler;
-            this.libDir = this.mainActivityRef.get().libDir;
-        }
-
-        @Override
-        public void run() {
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
-            Map<String, String> processEnv = processBuilder.environment();
-            processEnv.put("LD_LIBRARY_PATH", libDir);
-            processBuilder.redirectErrorStream(true);
-            try {
-                Process process = processBuilder.start();
-                mainThreadHandler.post(() -> mainActivityRef.get().initScanView());
-                InputStream processStdout = process.getInputStream();
-                boolean exited = false;
-                while (!exited && !stopped) {
-                    int outputByteCount = processStdout.available();
-                    if (outputByteCount > 0) {
-                        byte[] bytes = new byte[outputByteCount];
-                        processStdout.read(bytes);
-                        mainThreadHandler.post(
-                                () -> mainActivityRef.get().updateOutputView(
-                                        new String(bytes, StandardCharsets.UTF_8), false)
-                        );
-                    }
-                    if (stopped) {
-                        process.destroy();
-                    }
-                    try {
-                        process.exitValue();
-                        exited = true;
-                    } catch (IllegalThreadStateException ignored) {}
-                }
-                if (stopped) {
-                    mainThreadHandler.post(
-                            () -> Toast.makeText(
-                                    mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show());
-                }
-                mainThreadHandler.post(
-                        () -> mainActivityRef.get().updateOutputView("", true));
-            } catch (IOException e) {
-                Log.e(LOG_TAG, e.getMessage());
-                mainThreadHandler.post(
-                        () -> Toast.makeText(
-                                mainActivityRef.get(), e.getMessage(), Toast.LENGTH_LONG).show());
-            }
-        }
-
-        public void stopScan() {
-            stopped = true;
-        }
-    }
-
-    private static final String LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG";
+    public static final String LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG";
     private static final String[] NMAP_ASSETS = {"nmap-service-probes",
                                                  "nmap-services",
                                                  "nmap-protocols",
@@ -117,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private String libDir;
     private String nmapExecutablePath;
     private boolean isScanning = false;
-    private StartNmapScan currentNmapScan;
+    private NmapScan currentNmapScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,18 +137,19 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 return;
             }
             Log.d(LOG_TAG, String.valueOf(command));
-            currentNmapScan = new StartNmapScan(new WeakReference<>(this), command);
+            currentNmapScan = new NmapScan(
+                    new WeakReference<>(this), command, mainThreadHandler, libDir);
             executorService.execute(currentNmapScan);
         }
     }
 
-    private void initScanView() {
+    public void initScanView() {
         isScanning = true;
         binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause);
         binding.outputTextView.setText("");
     }
 
-    private void updateOutputView(String retrieved_output, boolean finished) {
+    public void updateOutputView(String retrieved_output, boolean finished) {
         if (finished) {
             isScanning = false;
             currentNmapScan = null;
