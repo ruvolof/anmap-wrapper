@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.18.1)
 
 project("anmapwrapper")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nmap-7.93/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nmap-7.94/)
 
 add_executable(
         libnmap-wrapper.so
