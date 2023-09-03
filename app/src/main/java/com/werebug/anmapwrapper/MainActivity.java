@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         super.onCreate(savedInstanceState);
 
         libDir = getApplicationInfo().nativeLibraryDir;
-        nmapExecutablePath = libDir + "/libnmap-wrapper.so";
+        nmapExecutablePath = libDir + "/libnmap.so";
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
