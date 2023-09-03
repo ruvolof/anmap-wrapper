@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Nmap Wrapper</string>
     <string name="nmap_hint">nmap -p 80 -sT 192.168.1.1</string>
-    <string name="main_credits">Nmap Wrapper for Android\nCreated by Werebug (https://werebug.com)\n\nThis is a wrapper around the Nmap network scanner cross-compiled for Android.\nThis is not an official Nmap application.\n\nExperimental: Root support. Prepend your command with sudo to run as root on rooted phones. For example:\nsudo nmap -O 192.168.1.1\n\nSource code, cross-compilation instructions and configuration are available at https://github.com/ruvolof/anmap-wrapper. Feel free to contribute or report bugs on Github.</string>
+    <string name="main_credits">Nmap Wrapper for Android\nCreated by Werebug (https://werebug.com)\n\nThis is a wrapper around the Nmap network scanner cross-compiled for Android.\nThis is not an official Nmap application.\n\nPrepend your command with sudo to run as root on rooted phones. For example:\nsudo nmap -O 192.168.1.1\n\nSource code, cross-compilation instructions and configuration are available at https://github.com/ruvolof/anmap-wrapper. Feel free to contribute or report bugs on Github.</string>
     <string name="invalid_nmap_syntax">Invalid command syntax. Example:\nnmap 192.168.1.1</string>
     <string name="invalid_sudo_syntax">Invalid sudo syntax. Example:\nsudo nmap 192.168.1.1</string>
 </resources>
