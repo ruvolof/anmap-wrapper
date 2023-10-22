@@ -10,6 +10,8 @@ it a bit and packaged it. It's still ugly, but it does its job. And maybe angry 
 
 ## How to cross-compile Nmap
 
+Be aware that the script to compile Nmap is based on my development environment. You might need to fix some paths for it to be working on your system.
+
 ```
 cd app/src/main/cpp
 ./make_nmap.sh
@@ -17,12 +19,9 @@ cd app/src/main/cpp
 
 The script will do the following:
 
-1) Download latest stable Nmap source (7.93 at the time of writing).
-2) Configure and compile Nmap as a shared library for `armeabi-v7a` and `arm64-v8a`.
+1) Download latest stable Nmap source (7.94 at the time of writing).
+2) Configure and compile Nmap for `armeabi-v7a` and `arm64-v8a`.
 3) Import Nmap resource files (like `nmap-services`) to Android assets directory.
-
-This operation needs to be performed only once. The C++ wrapper is compiled separately with Android CMake, so you don't need to rebuild the libraries
-if you change the wrapper.
 
 ## TODO
 
