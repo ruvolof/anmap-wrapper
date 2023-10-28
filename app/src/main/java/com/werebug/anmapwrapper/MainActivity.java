@@ -31,12 +31,6 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     public static final String LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG";
-    private static final String[] NMAP_ASSETS = {"nmap-service-probes",
-                                                 "nmap-services",
-                                                 "nmap-protocols",
-                                                 "nmap-rpc",
-                                                 "nmap-mac-prefixes",
-                                                 "nmap-os-db"};
     private final ExecutorService executorService = Executors.newFixedThreadPool(1);
     private final Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
 
@@ -57,38 +51,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         setContentView(binding.getRoot());
         binding.scanControlButton.setOnClickListener(this);
 
-        checkAndInstallNmapAssets();
-    }
-
-    private void checkAndInstallNmapAssets() {
-        for (String nmapAsset : NMAP_ASSETS) {
-            File nmap_services = getFileStreamPath(nmapAsset);
-            if (Objects.requireNonNull(nmap_services).exists()) {
-                continue;
-            }
-            BufferedReader asset_reader = null;
-            BufferedWriter local_copy_writer = null;
-            try {
-                asset_reader = new BufferedReader(
-                        new InputStreamReader(getAssets().open(nmapAsset)));
-                local_copy_writer = new BufferedWriter(
-                        new OutputStreamWriter(openFileOutput(nmapAsset, Context.MODE_PRIVATE)));
-                String line;
-                while ((line = asset_reader.readLine()) != null) {
-                    local_copy_writer.write(line + "\n");
-                }
-                Log.d(LOG_TAG, nmapAsset + " imported.");
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error importing " + nmapAsset + ".");
-            } finally {
-                try {
-                    Objects.requireNonNull(asset_reader).close();
-                } catch (IOException ignored) { }
-                try {
-                    Objects.requireNonNull(local_copy_writer).close();
-                } catch (IOException ignored) { }
-            }
-        }
+        executorService.execute(new ImportNmapAssets(new WeakReference<>(this)));
     }
 
     private ArrayList<String> getNmapCommand() throws Exception {
