@@ -7,11 +7,14 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 import java.nio.charset.StandardCharsets
 
-class NmapScan internal constructor(private val mainActivityRef: WeakReference<MainActivity>,
-                                    private val command: List<String>,
-                                    private val mainThreadHandler: Handler,
-                                    private val libDir: String) : Runnable {
+class NmapScan internal constructor(
+    private val mainActivityRef: WeakReference<MainActivity>,
+    private val command: List<String>,
+    private val mainThreadHandler: Handler,
+    private val libDir: String
+) : Runnable {
     private var stopped = false
+
     override fun run() {
         val processBuilder = ProcessBuilder(command)
         val processEnv = processBuilder.environment()
@@ -29,7 +32,8 @@ class NmapScan internal constructor(private val mainActivityRef: WeakReference<M
                     processStdout.read(bytes)
                     mainThreadHandler.post {
                         mainActivityRef.get()?.updateOutputView(
-                                String(bytes, StandardCharsets.UTF_8), false)
+                            String(bytes, StandardCharsets.UTF_8), false
+                        )
                     }
                 }
                 if (stopped) {
@@ -44,7 +48,8 @@ class NmapScan internal constructor(private val mainActivityRef: WeakReference<M
             if (stopped) {
                 mainThreadHandler.post {
                     Toast.makeText(
-                            mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT).show()
+                        mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
             mainThreadHandler.post {

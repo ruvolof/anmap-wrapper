@@ -73,7 +73,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
             Log.d(LOG_TAG, command.toString())
             currentNmapScan = NmapScan(
-                    WeakReference(this), command, mainThreadHandler, libDir)
+                WeakReference(this), command, mainThreadHandler, libDir
+            )
             executorService.execute(currentNmapScan)
         }
     }
@@ -91,6 +92,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send)
         }
         binding.outputTextView.text = String.format(
-                "%s%s", binding.outputTextView.text, retrievedOutput)
+            "%s%s", binding.outputTextView.text, retrievedOutput
+        )
     }
 }

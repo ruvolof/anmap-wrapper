@@ -15,16 +15,18 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
     companion object {
         private const val ASSET_VERSION_PREFS_KEY = "last_installed_asset_version"
         private const val ASSET_VERSION = "7.94"
-        private val NMAP_ASSETS = arrayOf("nmap-service-probes",
-                "nmap-services",
-                "nmap-protocols",
-                "nmap-rpc",
-                "nmap-mac-prefixes",
-                "nmap-os-db")
+        private val NMAP_ASSETS = arrayOf(
+            "nmap-service-probes",
+            "nmap-services",
+            "nmap-protocols",
+            "nmap-rpc",
+            "nmap-mac-prefixes",
+            "nmap-os-db"
+        )
     }
 
     private val preferences: SharedPreferences =
-            mainActivityRef.get()!!.getPreferences(Context.MODE_PRIVATE)
+        mainActivityRef.get()!!.getPreferences(Context.MODE_PRIVATE)
 
     override fun run() {
         val lastImportedVersion = preferences.getString(ASSET_VERSION_PREFS_KEY, "")
@@ -36,11 +38,18 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
             var reader: BufferedReader? = null
             var writer: BufferedWriter? = null
             try {
-                reader = BufferedReader(InputStreamReader(
-                        mainActivityRef.get()!!.assets.open(assetFileName)))
-                writer = BufferedWriter(OutputStreamWriter(
+                reader = BufferedReader(
+                    InputStreamReader(
+                        mainActivityRef.get()!!.assets.open(assetFileName)
+                    )
+                )
+                writer = BufferedWriter(
+                    OutputStreamWriter(
                         mainActivityRef.get()!!.openFileOutput(
-                                assetFileName, Context.MODE_PRIVATE)))
+                            assetFileName, Context.MODE_PRIVATE
+                        )
+                    )
+                )
                 var line: String?
                 while (reader.readLine().also { line = it } != null) {
                     writer.write("$line\n")
