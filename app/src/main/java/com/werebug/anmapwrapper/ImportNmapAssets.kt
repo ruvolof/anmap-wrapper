@@ -14,7 +14,7 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
 
     companion object {
         private const val ASSET_VERSION_PREFS_KEY = "last_installed_asset_version"
-        private const val ASSET_VERSION = "7.94"
+        private const val ASSET_VERSION = "7.95"
         private val NMAP_ASSETS = arrayOf(
             "nmap-service-probes",
             "nmap-services",

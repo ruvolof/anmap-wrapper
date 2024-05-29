@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NMAP_VERSION='7.94'
+NMAP_VERSION='7.95'
 NMAP_SRC="nmap-${NMAP_VERSION}.tgz"
 NMAP_DOWNLOAD_URL="https://nmap.org/dist/${NMAP_SRC}"
 NMAP_BUILD_DIR="nmap-${NMAP_VERSION}"
@@ -65,7 +65,6 @@ function cross_compile_nmap() {
               --without-ndiff \
               --with-libpcap=included \
               --with-liblinear=included \
-              --with-libssh2=included \
               --with-libpcre=included \
               --with-libz=included
   make STATIC='-static-libstdc++'
