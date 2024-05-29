@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.18.1)
 
 project("anmapwrapper")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nmap-7.94/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nmap-7.95/)
 
 add_executable(
         do_nothing.so
@@ -23,4 +23,5 @@ set_target_properties(
 
 target_link_libraries(
         do_nothing.so
-        nmap)
+        nmap
+        -Wl,--allow-shlib-undefined)
