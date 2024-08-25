@@ -17,8 +17,6 @@ class NmapScan internal constructor(
 
     override fun run() {
         val processBuilder = ProcessBuilder(command)
-        val processEnv = processBuilder.environment()
-        processEnv["LD_LIBRARY_PATH"] = libDir
         processBuilder.redirectErrorStream(true)
         try {
             val process = processBuilder.start()
