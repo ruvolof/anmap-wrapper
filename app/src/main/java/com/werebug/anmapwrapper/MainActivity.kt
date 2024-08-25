@@ -36,8 +36,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         executorService.execute(ImportNmapAssets(WeakReference(this)))
     }
 
-    private fun getNmapCommandArguments(): List<String> {
-        val argv = binding.nmapCommandInput.text.toString().split(" ").toMutableList()
+    private fun patchBinaryPaths(argv: MutableList<String>) {
         val isSudo = argv.indexOf("sudo")
         if (isSudo > 0) {
             throw Exception(getString(R.string.invalid_sudo_syntax))
@@ -52,10 +51,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         argv.removeAt(nmapIndex)
         argv.add(nmapIndex, nmapExecutablePath)
-        Collections.addAll(argv, "--datadir", filesDir.toString())
-        if (!argv.contains("--dns-servers")) {
-            Collections.addAll(argv, "--dns-servers", "8.8.8.8")
+    }
+
+    private fun patchReserved(argv: MutableList<String>, flag: String, value: String) {
+        if (argv.contains(flag)) {
+            throw Exception(getString(R.string.reserved_nmap_flag_error, flag))
         }
+        Collections.addAll(argv, flag, value)
+    }
+
+    private fun patchDefault(argv: MutableList<String>, flag: String, value: String) {
+        if (!argv.contains(flag)) {
+            Collections.addAll(argv, flag, value)
+        }
+    }
+
+    private fun getNmapCommandArguments(): List<String> {
+        val argv = binding.nmapCommandInput.text.toString().split(" ").toMutableList()
+        patchBinaryPaths(argv)
+        patchReserved(argv, "--datadir", filesDir.toString())
+        patchDefault(argv, "--dns-servers", "8.8.8.8")
         return argv
     }
 
