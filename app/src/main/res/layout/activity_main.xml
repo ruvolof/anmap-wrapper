@@ -6,6 +6,16 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <Button
+        android:id="@+id/parse_output_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/parse_button_label"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/nmap_command_input"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <ImageButton
         android:id="@+id/scan_control_button"
         android:layout_width="wrap_content"
@@ -28,7 +38,7 @@
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/nmap_command_input"
+        app:layout_constraintBottom_toTopOf="@+id/parse_output_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -42,9 +52,9 @@
                 android:id="@+id/output_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:autoLink="web"
                 android:padding="10dp"
                 android:text="@string/main_credits"
-                android:autoLink="web"
                 android:textIsSelectable="true" />
         </LinearLayout>
     </ScrollView>

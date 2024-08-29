@@ -1,5 +1,6 @@
 package com.werebug.anmapwrapper
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -7,8 +8,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.HandlerCompat
+import androidx.transition.Visibility
 import com.werebug.anmapwrapper.databinding.ActivityMainBinding
+import com.werebug.anmapwrapper.parser.ParserActivity
+import java.io.File
 import java.lang.ref.WeakReference
+import java.nio.file.Paths
 import java.util.Collections
 import java.util.concurrent.Executors
 
@@ -33,6 +38,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.scanControlButton.setOnClickListener(this)
+        binding.parseOutputButton.setOnClickListener(this)
         executorService.execute(ImportNmapAssets(WeakReference(this)))
     }
 
@@ -70,27 +76,34 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val argv = binding.nmapCommandInput.text.toString().split(" ").toMutableList()
         patchBinaryPaths(argv)
         patchReserved(argv, "--datadir", filesDir.toString())
+        patchReserved(argv, "-oX", File(filesDir, "scan_output.xml").path)
         patchDefault(argv, "--dns-servers", "8.8.8.8")
         return argv
     }
 
     override fun onClick(view: View) {
-        if (view.id == R.id.scan_control_button) {
-            if (isScanning) {
-                currentNmapScan!!.stopScan()
-                return
+        when (view.id) {
+            R.id.scan_control_button -> {
+                if (isScanning) {
+                    currentNmapScan!!.stopScan()
+                    return
+                }
+                val command = try {
+                    getNmapCommandArguments()
+                } catch (e: Exception) {
+                    Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
+                    return
+                }
+                Log.d(LOG_TAG, command.toString())
+                currentNmapScan = NmapScan(
+                    WeakReference(this), command, mainThreadHandler, libDir
+                )
+                executorService.execute(currentNmapScan)
             }
-            val command = try {
-                getNmapCommandArguments()
-            } catch (e: Exception) {
-                Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
-                return
+
+            R.id.parse_output_button -> {
+                startParserActivity()
             }
-            Log.d(LOG_TAG, command.toString())
-            currentNmapScan = NmapScan(
-                WeakReference(this), command, mainThreadHandler, libDir
-            )
-            executorService.execute(currentNmapScan)
         }
     }
 
@@ -98,6 +111,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         isScanning = true
         binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause)
         binding.outputTextView.text = ""
+        binding.parseOutputButton.visibility = View.GONE
     }
 
     fun updateOutputView(retrievedOutput: String?, finished: Boolean) {
@@ -109,5 +123,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.outputTextView.text = String.format(
             "%s%s", binding.outputTextView.text, retrievedOutput
         )
+    }
+
+    fun showParseButton() {
+        binding.parseOutputButton.visibility = View.VISIBLE
+    }
+
+    private fun startParserActivity() {
+        val intent = Intent(this, ParserActivity::class.java)
+        startActivity(intent)
     }
 }
