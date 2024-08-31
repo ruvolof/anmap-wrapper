@@ -7,14 +7,25 @@
     tools:context=".MainActivity">
 
     <Button
+        android:id="@+id/clear_output_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/clear_button_label"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/scan_control_button"
+        app:layout_constraintWidth_percent="0.5" />
+
+    <Button
         android:id="@+id/parse_output_button"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/parse_button_label"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/nmap_command_input"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/clear_output_button"
+        app:layout_constraintBottom_toTopOf="@id/scan_control_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.5" />
 
     <ImageButton
         android:id="@+id/scan_control_button"
@@ -38,7 +49,7 @@
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/parse_output_button"
+        app:layout_constraintBottom_toTopOf="@+id/clear_output_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">

@@ -18,8 +18,7 @@ class ParserActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.hostListRecyclerView.layoutManager = LinearLayoutManager(this)
-        val file = File(filesDir, "scan_output.xml")
-        val hosts = FileInputStream(file).use {
+        val hosts = FileInputStream(File(filesDir, "scan_output.xml")).use {
             XMLOutputParser().parse(it)
         }
         hostAdapter = HostAdapter(hosts)

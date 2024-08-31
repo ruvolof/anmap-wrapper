@@ -11,5 +11,6 @@
     <string name="port_state_label">State</string>
     <string name="service_label">Name</string>
     <string name="service_version_label">Product/Version</string>
-    <string name="parse_button_label">Parse XML Output</string>
+    <string name="parse_button_label">Parse</string>
+    <string name="clear_button_label">Clear</string>
 </resources>

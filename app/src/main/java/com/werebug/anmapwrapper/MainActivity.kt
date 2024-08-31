@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(binding.root)
         binding.scanControlButton.setOnClickListener(this)
         binding.parseOutputButton.setOnClickListener(this)
+        binding.clearOutputButton.setOnClickListener(this)
         executorService.execute(ImportNmapAssets(WeakReference(this)))
     }
 
@@ -102,6 +103,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.parse_output_button -> {
                 startParserActivity()
             }
+
+            R.id.clear_output_button -> {
+                binding.outputTextView.text = getString(R.string.main_credits)
+                hidePostScanButtons()
+            }
         }
     }
 
@@ -109,7 +115,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         isScanning = true
         binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause)
         binding.outputTextView.text = ""
-        binding.parseOutputButton.visibility = View.GONE
+        hidePostScanButtons()
     }
 
     fun updateOutputView(retrievedOutput: String?, finished: Boolean) {
@@ -117,14 +123,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             isScanning = false
             currentNmapScan = null
             binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send)
+            binding.clearOutputButton.visibility = View.VISIBLE
         }
         binding.outputTextView.text = String.format(
             "%s%s", binding.outputTextView.text, retrievedOutput
         )
     }
 
-    fun showParseButton() {
+    fun hidePostScanButtons() {
+        binding.parseOutputButton.visibility = View.GONE
+        binding.clearOutputButton.visibility = View.GONE
+    }
+
+    fun showPostScanButtons() {
         binding.parseOutputButton.visibility = View.VISIBLE
+        binding.clearOutputButton.visibility = View.VISIBLE
     }
 
     private fun startParserActivity() {
