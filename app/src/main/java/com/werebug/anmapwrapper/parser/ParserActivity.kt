@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.werebug.anmapwrapper.databinding.ActivityParserBinding
 import java.io.File
 import java.io.FileInputStream
-import java.io.InputStream
 
 class ParserActivity : AppCompatActivity() {
 
@@ -20,9 +19,9 @@ class ParserActivity : AppCompatActivity() {
 
         binding.hostListRecyclerView.layoutManager = LinearLayoutManager(this)
         val file = File(filesDir, "scan_output.xml")
-        val inputStream: InputStream = FileInputStream(file)
-        val parser = XMLOutputParser()
-        val hosts = parser.parse(inputStream)
+        val hosts = FileInputStream(file).use {
+            XMLOutputParser().parse(it)
+        }
         hostAdapter = HostAdapter(hosts)
         binding.hostListRecyclerView.adapter = hostAdapter
     }
