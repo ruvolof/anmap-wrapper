@@ -6,7 +6,8 @@
     <string name="invalid_sudo_syntax">Invalid sudo syntax. Example:\nsudo nmap 192.168.1.1</string>
     <string name="reserved_nmap_flag_error">The flag %1$s is reserved for correct functioning of Nmap Wrapper for Android.</string>
     <string name="hostname_label">Hostname(s):</string>
-    <string name="address_label">IP Addr:</string>
+    <string name="ip_address_label">IPv4:</string>
+    <string name="mac_address_label">MAC:</string>
     <string name="port_label">Port</string>
     <string name="port_state_label">State</string>
     <string name="service_label">Name</string>

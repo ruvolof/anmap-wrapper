@@ -10,6 +10,7 @@ class XMLOutputParser {
         val hosts = mutableListOf<Host>()
         var hostnames = mutableSetOf<String>()
         var ipAddress: String? = null
+        var macAddress: String? = null
         var services = mutableListOf<Service>()
 
         fun parsePortTag(parser: XmlPullParser) {
@@ -46,6 +47,19 @@ class XMLOutputParser {
             }
         }
 
+        fun parseAddressTag(parser: XmlPullParser) {
+            val type = parser.getAttributeValue(null, "addrtype")
+            when (type) {
+                "ipv4" -> {
+                    ipAddress = parser.getAttributeValue(null, "addr")
+                }
+
+                "mac" -> {
+                    macAddress = parser.getAttributeValue(null, "addr")
+                }
+            }
+        }
+
         fun parseHostTag(parser: XmlPullParser) {
             while (parser.next() != XmlPullParser.END_TAG || parser.name != "host") {
                 if (parser.eventType == XmlPullParser.START_TAG) {
@@ -55,7 +69,7 @@ class XMLOutputParser {
                         }
 
                         "address" -> {
-                            ipAddress = parser.getAttributeValue(null, "addr")
+                            parseAddressTag(parser)
                         }
 
                         "port" -> {
@@ -72,6 +86,7 @@ class XMLOutputParser {
                     Host(
                         hostnames = hostnames,
                         ipAddress = ip,
+                        macAddress = macAddress,
                         services = services
                     )
                 )
@@ -79,6 +94,7 @@ class XMLOutputParser {
             services = mutableListOf()
             hostnames = mutableSetOf()
             ipAddress = null
+            macAddress = null
         }
 
         try {
