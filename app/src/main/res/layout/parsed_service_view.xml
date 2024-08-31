@@ -11,15 +11,31 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.3" />
+        app:layout_constraintWidth_percent="0.15" />
+
+    <TextView
+        android:id="@+id/port_state_text_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/port_id_text_view"
+        app:layout_constraintBaseline_toBaselineOf="@id/port_id_text_view"
+        app:layout_constraintWidth_percent="0.15" />
 
     <TextView
         android:id="@+id/service_name_text_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/port_id_text_view"
+        app:layout_constraintStart_toEndOf="@id/port_state_text_view"
         app:layout_constraintBaseline_toBaselineOf="@id/port_id_text_view"
-        app:layout_constraintWidth_percent="0.7" />
+        app:layout_constraintWidth_percent="0.2" />
+
+    <TextView
+        android:id="@+id/service_product_version_text_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/service_name_text_view"
+        app:layout_constraintBaseline_toBaselineOf="@id/port_id_text_view"
+        app:layout_constraintWidth_percent="0.5" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

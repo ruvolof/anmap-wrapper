@@ -12,6 +12,75 @@ class XMLOutputParser {
         var ipAddress: String? = null
         var services = mutableListOf<Service>()
 
+        fun parsePortTag(parser: XmlPullParser) {
+            val portId = parser.getAttributeValue(null, "portid")?.toInt()
+            var portState = ""
+            var serviceName = ""
+            var serviceProduct = ""
+            var serviceVersion = ""
+            while (parser.next() != XmlPullParser.END_TAG || parser.name != "port") {
+                if (parser.eventType == XmlPullParser.START_TAG) {
+                    when (parser.name) {
+                        "service" -> {
+                            serviceName = parser.getAttributeValue(null, "name") ?: ""
+                            serviceProduct = parser.getAttributeValue(null, "product") ?: ""
+                            serviceVersion = parser.getAttributeValue(null, "version") ?: ""
+                        }
+
+                        "state" -> {
+                            portState = parser.getAttributeValue(null, "state")
+                        }
+                    }
+                }
+            }
+            portId?.let {
+                services.add(
+                    Service(
+                        port = it,
+                        state = portState,
+                        name = serviceName,
+                        product = serviceProduct,
+                        version = serviceVersion
+                    )
+                )
+            }
+        }
+
+        fun parseHostTag(parser: XmlPullParser) {
+            while (parser.next() != XmlPullParser.END_TAG || parser.name != "host") {
+                if (parser.eventType == XmlPullParser.START_TAG) {
+                    when (parser.name) {
+                        "hostname" -> {
+                            hostnames.add(parser.getAttributeValue(null, "name"))
+                        }
+
+                        "address" -> {
+                            ipAddress = parser.getAttributeValue(null, "addr")
+                        }
+
+                        "port" -> {
+                            parsePortTag(parser)
+                        }
+                    }
+                }
+            }
+            ipAddress?.let { ip ->
+                if (hostnames.isEmpty()) {
+                    hostnames.add("N/A")
+                }
+                hosts.add(
+                    Host(
+                        hostnames = hostnames,
+                        ipAddress = ip,
+                        services = services
+                    )
+                )
+            }
+            services = mutableListOf()
+            hostnames = mutableSetOf()
+            ipAddress = null
+        }
+
         try {
             val factory = XmlPullParserFactory.newInstance()
             val parser = factory.newPullParser()
@@ -20,60 +89,7 @@ class XMLOutputParser {
             var eventType = parser.eventType
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG && parser.name == "host") {
-                    eventType = parser.next()
-                    while (eventType != XmlPullParser.END_TAG || parser.name != "host") {
-                        if (eventType == XmlPullParser.START_TAG) {
-                            when (parser.name) {
-                                "hostname" -> {
-                                    hostnames.add(parser.getAttributeValue(null, "name"))
-                                }
-
-                                "address" -> {
-                                    ipAddress = parser.getAttributeValue(null, "addr")
-                                }
-
-                                "port" -> {
-                                    val portId = parser.getAttributeValue(null, "portid")?.toInt()
-                                    var serviceName = ""
-
-                                    // Loop to get the details inside the port tag
-                                    while (parser.next() != XmlPullParser.END_TAG || parser.name != "port") {
-                                        if (parser.eventType == XmlPullParser.START_TAG) {
-                                            when (parser.name) {
-                                                "service" -> {
-                                                    serviceName =
-                                                        parser.getAttributeValue(null, "name") ?: ""
-                                                }
-                                            }
-                                        }
-                                    }
-                                    portId?.let {
-                                        services.add(
-                                            Service(
-                                                port = it,
-                                                name = serviceName
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        eventType = parser.next()
-                    }
-                    ipAddress?.let { ip ->
-                        if (hostnames.isEmpty()) {
-                            hostnames.add("N/A")
-                        }
-                        hosts.add(
-                            Host(
-                                hostnames = hostnames,
-                                ipAddress = ip,
-                                services = services
-                            )
-                        )
-                    }
-                    services = mutableListOf()
-                    hostnames = mutableSetOf()
+                    parseHostTag(parser)
                 }
                 eventType = parser.next()
             }

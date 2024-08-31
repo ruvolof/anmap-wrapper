@@ -8,6 +8,8 @@
     <string name="hostname_label">Hostname(s):</string>
     <string name="address_label">IP Addr:</string>
     <string name="port_label">Port</string>
+    <string name="port_state_label">State</string>
     <string name="service_label">Name</string>
+    <string name="service_version_label">Product/Version</string>
     <string name="parse_button_label">Parse XML Output</string>
 </resources>

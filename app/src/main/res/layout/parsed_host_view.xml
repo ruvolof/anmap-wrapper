@@ -51,24 +51,43 @@
         android:id="@+id/port_label_text_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:text="@string/port_label"
         android:textStyle="bold"
-        android:layout_marginTop="2dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/address_label_text_view"
-        app:layout_constraintEnd_toEndOf="@id/hostname_label_text_view"
-        app:layout_constraintWidth_percent="0.3" />
+        app:layout_constraintWidth_percent="0.15" />
 
     <TextView
-        android:id="@+id/service_label_text_view"
+        android:id="@+id/port_state_label_text_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="@string/port_state_label"
+        app:layout_constraintBaseline_toBaselineOf="@id/port_label_text_view"
+        app:layout_constraintStart_toEndOf="@id/port_label_text_view"
+        app:layout_constraintWidth_percent="0.15" />
+
+    <TextView
+        android:id="@+id/service_name_label_text_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:text="@string/service_label"
         app:layout_constraintBaseline_toBaselineOf="@id/port_label_text_view"
-        app:layout_constraintStart_toEndOf="@id/port_label_text_view"
+        app:layout_constraintStart_toEndOf="@id/port_state_label_text_view"
+        app:layout_constraintWidth_percent="0.2" />
+
+    <TextView
+        android:id="@+id/service_version_text_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="@string/service_version_label"
+        app:layout_constraintBaseline_toBaselineOf="@id/port_label_text_view"
+        app:layout_constraintStart_toEndOf="@id/service_name_label_text_view"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.7" />
+        app:layout_constraintWidth_percent="0.5" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/open_services_list_view"

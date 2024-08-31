@@ -8,12 +8,10 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.HandlerCompat
-import androidx.transition.Visibility
 import com.werebug.anmapwrapper.databinding.ActivityMainBinding
 import com.werebug.anmapwrapper.parser.ParserActivity
 import java.io.File
 import java.lang.ref.WeakReference
-import java.nio.file.Paths
 import java.util.Collections
 import java.util.concurrent.Executors
 
