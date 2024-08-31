@@ -36,6 +36,8 @@ class HostAdapter(private val hostList: List<Host>) :
         holder.servicesRecyclerView.adapter = ServiceAdapter(host.services)
         if (position % 2 == 1) {
             holder.containerConstraintLayout.setBackgroundColor(Color.LTGRAY)
+        } else {
+            holder.containerConstraintLayout.setBackgroundColor(Color.WHITE)
         }
     }
 
