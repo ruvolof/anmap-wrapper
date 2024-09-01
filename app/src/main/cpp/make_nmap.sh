@@ -101,7 +101,6 @@ function cross_compile_nmap() {
   export_make_toolchain "$1"
   ./configure --host "${TARGET}" \
               --without-ncat \
-              --without-liblua \
               --without-nping \
               --without-zenmap \
               --without-ndiff \
@@ -110,7 +109,8 @@ function cross_compile_nmap() {
               --with-libpcap=included \
               --with-liblinear=included \
               --with-libpcre=included \
-              --with-libz=included
+              --with-libz=included \
+              --with-liblua=included
 
   make STATIC='-static-libstdc++'
   cp nmap "../libs/${ANDROID_TARGETS_ABI[$TARGET]}/libnmap.so"
