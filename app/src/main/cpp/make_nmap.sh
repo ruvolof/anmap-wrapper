@@ -16,12 +16,14 @@ readonly OPENSSL_BUILD_DIR="${SCRIPT_DIR}/openssl-${OPENSSL_VERSION}"
 readonly ANDROID_NDK_ROOT="$(ls -dr /home/${USER}/Android/Sdk/ndk/* | head -1)"
 readonly HOST_ARCH='linux-x86_64'
 
-readonly NMAP_ASSETS=('nmap-service-probes'
-                      'nmap-services'
-                      'nmap-protocols'
-                      'nmap-rpc'
-                      'nmap-mac-prefixes'
-                      'nmap-os-db')
+readonly NMAP_ASSET_FILES=('nmap-service-probes'
+                           'nmap-services'
+                           'nmap-protocols'
+                           'nmap-rpc'
+                           'nmap-mac-prefixes'
+                           'nmap-os-db'
+                           'nse_main.lua')
+readonly NMAP_ASSET_FOLDERS=('scripts' 'nselib')
 
 declare -A ANDROID_TARGETS_ABI=(['aarch64-linux-android']='arm64-v8a' \
                                 ['armv7a-linux-androideabi']='armeabi-v7a')
@@ -117,8 +119,12 @@ function cross_compile_nmap() {
 }
 
 function import_nmap_assets_in_android_project() {
-  for asset in "${NMAP_ASSETS[@]}"; do
-    cp "${NMAP_BUILD_DIR}/${asset}" ../assets/"${asset}"
+  rm -rf ../assets/*
+  for file in "${NMAP_ASSET_FILES[@]}"; do
+    cp "${NMAP_BUILD_DIR}/${file}" ../assets/"${file}"
+  done
+  for folder in "${NMAP_ASSET_FOLDERS[@]}"; do
+    cp -r "${NMAP_BUILD_DIR}/${folder}" "../assets/${folder}"
   done
 }
 
