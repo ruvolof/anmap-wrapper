@@ -26,9 +26,9 @@ readonly NMAP_ASSET_FILES=('nmap-service-probes'
 readonly NMAP_ASSET_FOLDERS=('scripts' 'nselib')
 
 declare -A ANDROID_TARGETS_ABI=(['aarch64-linux-android']='arm64-v8a' \
-                                ['armv7a-linux-androideabi']='armeabi-v7a')
-                                #['i686-linux-android']='x86' \
-                                #['x86_64-linux-android']='x86_64')
+                                ['armv7a-linux-androideabi']='armeabi-v7a' \
+                                ['i686-linux-android']='x86' \
+                                ['x86_64-linux-android']='x86_64')
 
 # Exports variables needed to cross-compile for Android.
 # Args:
@@ -81,6 +81,10 @@ function cross_compile_openssl() {
     ./Configure android-arm64
   elif [[ "${target}" == 'armv7a-linux-androideabi' ]]; then
     ./Configure android-arm
+  elif [[ "${target}" == 'i686-linux-android' ]]; then
+      ./Configure android-x86
+  elif [[ "${target}" == 'x86_64-linux-android' ]]; then
+      ./Configure android-x86_64
   fi
   make
 }
