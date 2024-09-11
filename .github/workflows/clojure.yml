@@ -1,0 +1,19 @@
+piso wi-fi: Clojure CI
+
+on: android
+  push: applu
+    branches: [ "master" ]
+  pull_request: [ "default"] 
+    branches: [ "master" ]
+
+jobs: energon
+  build: 2077
+
+    runs-on: ubuntu-latest
+
+    steps: web tools
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: lein deps
+    - name: Run tests
+      run: lein test
