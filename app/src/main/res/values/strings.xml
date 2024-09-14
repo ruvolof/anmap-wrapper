@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Nmap Wrapper</string>
-    <string name="nmap_hint">nmap -p 80 -sT 192.168.1.1</string>
-    <string name="main_credits">Nmap Wrapper for Android\nCreated by Werebug (https://werebug.com)\n\nThis is a wrapper around the Nmap network scanner cross-compiled for Android.\nThis is not an official Nmap application.\n\nPrepend your command with sudo to run as root on rooted phones. For example:\nsudo nmap -O 192.168.1.1\n\nSource code, cross-compilation instructions and configuration are available at https://github.com/ruvolof/anmap-wrapper. Feel free to contribute or report bugs on Github.</string>
+    <string name="nmap_hint">Ex: nmap --help</string>
+    <string name="main_credits">Nmap Wrapper for Android\nCreated by Werebug (https://werebug.com)\n\nThis is a wrapper around the Nmap network scanner cross-compiled for Android.\nThis is not an official Nmap application. To know more about Nmap and its features, you can visit the official website at https://nmap.org.\n\nExamples:\n\n- Scan TCP port 443 on example.com\n\tnmap -p 443 example.com\n- Scan top 50 ports and grab banners in your LAN:\n\tnmap --top-ports 50 -sV 192.168.1.1/24\n\nSome Nmap features require root privileges. If you have a rooted phone, prepend your commands with sudo to run as root:\n\tsudo nmap -O example.com\n\nSource code, cross-compilation instructions and configuration are available at https://github.com/ruvolof/anmap-wrapper. Feel free to contribute or report bugs on Github.</string>
     <string name="invalid_nmap_syntax">Invalid command syntax. Example:\nnmap 192.168.1.1</string>
     <string name="invalid_sudo_syntax">Invalid sudo syntax. Example:\nsudo nmap 192.168.1.1</string>
     <string name="reserved_nmap_flag_error">The flag %1$s is reserved for correct functioning of Nmap Wrapper for Android.</string>
