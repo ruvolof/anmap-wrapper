@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
         const val LOG_TAG = "ANMAPWRAPPER_CUSTOM_LOG"
+        const val XML_OUTPUT_FILE = "tmp/scan_output.xml"
     }
 
     private val executorService = Executors.newFixedThreadPool(1)
@@ -39,6 +40,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.parseOutputButton.setOnClickListener(this)
         binding.clearOutputButton.setOnClickListener(this)
         executorService.execute(ImportNmapAssets(WeakReference(this)))
+        makeTmpDir()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cleanTmpFiles()
     }
 
     private fun patchBinaryPaths(argv: MutableList<String>) {
@@ -75,7 +82,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val argv = binding.nmapCommandInput.text.toString().split(" ").toMutableList()
         patchBinaryPaths(argv)
         patchReserved(argv, "--datadir", filesDir.toString())
-        patchReserved(argv, "-oX", File(filesDir, "scan_output.xml").path)
+        patchReserved(argv, "-oX", File(filesDir, XML_OUTPUT_FILE).path)
         patchDefault(argv, "--dns-servers", "8.8.8.8")
         return argv
     }
@@ -83,6 +90,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(view: View) {
         when (view.id) {
             R.id.scan_control_button -> {
+                cleanTmpFiles()
                 if (isScanning) {
                     currentNmapScan!!.stopScan()
                     return
@@ -143,5 +151,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun startParserActivity() {
         val intent = Intent(this, ParserActivity::class.java)
         startActivity(intent)
+    }
+
+    private fun makeTmpDir() {
+        File(filesDir, "tmp").mkdirs()
+        cleanTmpFiles()
+    }
+
+    private fun cleanTmpFiles() {
+        val scanXmlOutput = File(filesDir, XML_OUTPUT_FILE)
+        if (scanXmlOutput.exists()) {
+            scanXmlOutput.delete()
+        }
     }
 }
