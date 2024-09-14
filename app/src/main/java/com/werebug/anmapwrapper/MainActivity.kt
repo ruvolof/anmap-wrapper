@@ -131,21 +131,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             isScanning = false
             currentNmapScan = null
             binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send)
-            binding.clearOutputButton.visibility = View.VISIBLE
+            showPostScanButtons()
         }
         binding.outputTextView.text = String.format(
             "%s%s", binding.outputTextView.text, retrievedOutput
         )
     }
 
-    fun hidePostScanButtons() {
+    private fun hidePostScanButtons() {
         binding.parseOutputButton.visibility = View.GONE
         binding.clearOutputButton.visibility = View.GONE
     }
 
-    fun showPostScanButtons() {
-        binding.parseOutputButton.visibility = View.VISIBLE
+    private fun showPostScanButtons() {
         binding.clearOutputButton.visibility = View.VISIBLE
+        if (File(filesDir, XML_OUTPUT_FILE).exists()) {
+            binding.parseOutputButton.visibility = View.VISIBLE
+        }
     }
 
     private fun startParserActivity() {

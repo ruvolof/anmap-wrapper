@@ -38,10 +38,7 @@ class NmapScan internal constructor(
                     process.destroy()
                 }
                 try {
-                    val exitVal = process.exitValue()
-                    if (exitVal == 0) {
-                        mainThreadHandler.post { mainActivityRef.get()?.showPostScanButtons() }
-                    }
+                    process.exitValue()
                     exited = true
                 } catch (ignored: IllegalThreadStateException) {
                 }
