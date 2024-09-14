@@ -114,6 +114,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
             R.id.clear_output_button -> {
                 binding.outputTextView.text = getString(R.string.main_credits)
+                cleanTmpFiles()
                 hidePostScanButtons()
             }
         }
