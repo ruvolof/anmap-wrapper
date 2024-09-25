@@ -14,4 +14,11 @@
     <string name="service_version_label">Product/Version</string>
     <string name="parse_button_label">Parse</string>
     <string name="clear_button_label">Clear</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Preferences -->
+    <string name="experimental_features_header">Experimental Features</string>
+    <string name="xml_parser_preference_title">XML Parser</string>
+    <string name="xml_parser_preference_summary">Shows a button to parse the xml output when the scan finishes.</string>
+
 </resources>

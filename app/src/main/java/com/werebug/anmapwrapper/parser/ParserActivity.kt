@@ -1,6 +1,7 @@
 package com.werebug.anmapwrapper.parser
 
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.werebug.anmapwrapper.MainActivity
@@ -24,5 +25,18 @@ class ParserActivity : AppCompatActivity() {
         }
         hostAdapter = HostAdapter(hosts)
         binding.hostListRecyclerView.adapter = hostAdapter
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                onBackPressedDispatcher.onBackPressed()
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

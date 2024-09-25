@@ -1,13 +1,17 @@
 package com.werebug.anmapwrapper
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.HandlerCompat
+import androidx.preference.PreferenceManager
 import com.werebug.anmapwrapper.databinding.ActivityMainBinding
 import com.werebug.anmapwrapper.parser.ParserActivity
 import java.io.File
@@ -27,6 +31,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var libDir: String
     private lateinit var nmapExecutablePath: String
+    private lateinit var sharedPreferences: SharedPreferences
     private var isScanning = false
     private var currentNmapScan: NmapScan? = null
 
@@ -35,6 +40,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         libDir = applicationInfo.nativeLibraryDir
         nmapExecutablePath = "$libDir/libnmap.so"
         binding = ActivityMainBinding.inflate(layoutInflater)
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         setContentView(binding.root)
         binding.scanControlButton.setOnClickListener(this)
         binding.parseOutputButton.setOnClickListener(this)
@@ -46,6 +52,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onDestroy() {
         super.onDestroy()
         cleanTmpFiles()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                // Handle Settings click
+                startSettingsActivity()
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun patchBinaryPaths(argv: MutableList<String>) {
@@ -82,8 +105,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val argv = binding.nmapCommandInput.text.toString().split(" ").toMutableList()
         patchBinaryPaths(argv)
         patchReserved(argv, "--datadir", filesDir.toString())
-        patchReserved(argv, "-oX", File(filesDir, XML_OUTPUT_FILE).path)
         patchDefault(argv, "--dns-servers", "8.8.8.8")
+        if (isParserEnabled()) {
+            patchReserved(argv, "-oX", File(filesDir, XML_OUTPUT_FILE).path)
+        }
         return argv
     }
 
@@ -146,13 +171,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun showPostScanButtons() {
         binding.clearOutputButton.visibility = View.VISIBLE
-        if (File(filesDir, XML_OUTPUT_FILE).exists()) {
+        if (isParserEnabled() && File(filesDir, XML_OUTPUT_FILE).exists()) {
             binding.parseOutputButton.visibility = View.VISIBLE
         }
     }
 
     private fun startParserActivity() {
         val intent = Intent(this, ParserActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun startSettingsActivity() {
+        val intent = Intent(this, SettingsActivity::class.java)
         startActivity(intent)
     }
 
@@ -166,5 +196,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if (scanXmlOutput.exists()) {
             scanXmlOutput.delete()
         }
+    }
+
+    private fun isParserEnabled(): Boolean {
+        return sharedPreferences.getBoolean("enable_parser", false)
     }
 }

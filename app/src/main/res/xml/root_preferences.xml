@@ -1,0 +1,15 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:title="@string/experimental_features_header"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            app:key="enable_parser"
+            app:title="@string/xml_parser_preference_title"
+            app:summary="@string/xml_parser_preference_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
