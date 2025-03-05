@@ -25,8 +25,12 @@ jobs:
 
     - name: Download latest release APK
       run: |
-        curl -L -o app-release.apk \
-        $(curl -s https://api.github.com/repos/Jeiel0rbit/anmap-wrapper/releases/latest | grep "browser_download_url.*apk" | cut -d '"' -f 4)
+        APK_URL=$(curl -s https://api.github.com/repos/Jeiel0rbit/anmap-wrapper/releases/latest | grep "browser_download_url.*apk" | cut -d '"' -f 4)
+        if [ -z "$APK_URL" ]; then
+          echo "Erro: Nenhuma release com APK encontrada!"
+          exit 1
+        fi
+        curl -L -o app-release.apk "$APK_URL"
 
     - name: Extract APK contents
       run: unzip app-release.apk -d extracted_apk
