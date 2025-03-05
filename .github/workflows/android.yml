@@ -23,17 +23,20 @@ jobs:
     - name: Install Android SDK Command-Line Tools
       run: |
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
-        unzip -q commandlinetools.zip -d android-sdk
+        unzip -q commandlinetools.zip -d android-sdk-temp
+        mkdir -p android-sdk/cmdline-tools
+        mv android-sdk-temp/cmdline-tools android-sdk/cmdline-tools/latest
+        rm -rf android-sdk-temp
         echo "ANDROID_HOME=/home/runner/android-sdk" >> $GITHUB_ENV
-        echo "$ANDROID_HOME/cmdline-tools/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: Accept Android SDK licenses
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --licenses
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
     - name: Set up Android NDK
       run: |
-        $ANDROID_HOME/cmdline-tools/bin/sdkmanager "ndk;25.2.9519653"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;25.2.9519653"
         echo "ANDROID_NDK_HOME=/home/runner/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
 
     - name: Compile Nmap
