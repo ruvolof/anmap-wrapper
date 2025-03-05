@@ -14,36 +14,19 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
+    - name: Set up JDK 17 and Android SDK
+      uses: android-actions/setup-android@v3
       with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+        sdk-tools-version: '9477386'  # commandlinetools-linux-9477386_latest.zip
 
-    - name: Install Android SDK Command-Line Tools
+    - name: Install NDK and accept licenses
       run: |
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
-        unzip -q commandlinetools.zip -d android-sdk-temp
-        mkdir -p android-sdk/cmdline-tools
-        mv android-sdk-temp/cmdline-tools android-sdk/cmdline-tools/latest
-        rm -rf android-sdk-temp
-        echo "ANDROID_HOME=/home/runner/android-sdk" >> $GITHUB_ENV
-        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-
-    - name: Accept Android SDK licenses
-      run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-    - name: Install Android NDK
-      run: |
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;25.2.9519653"
-        echo "ANDROID_NDK_HOME=/home/runner/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
+        sdkmanager "ndk;25.2.9519653"
+        yes | sdkmanager --licenses
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
 
     - name: Install build dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential libssl-dev wget unzip
+      run: sudo apt-get update && sudo apt-get install -y build-essential libssl-dev wget
 
     - name: Compile Nmap
       run: |
@@ -51,11 +34,11 @@ jobs:
         chmod +x make_nmap.sh
         ./make_nmap.sh
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
     - name: Build Debug APK
-      run: ./gradlew assembleDebug
+      run: |
+        cd ../../..
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
