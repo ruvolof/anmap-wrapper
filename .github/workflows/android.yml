@@ -26,12 +26,18 @@ jobs:
         echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
 
     - name: Install build dependencies
-      run: sudo apt-get update && sudo apt-get install -y build-essential libssl-dev wget
+      run: sudo apt-get update && sudo apt-get install -y build-essential libssl-dev wget tar
 
-    - name: Compile Nmap
+    - name: Compile Nmap with debug
       run: |
-        chmod +x app/src/main/cpp/make_nmap.sh
-        app/src/main/cpp/make_nmap.sh
+        cd app/src/main/cpp
+        chmod +x make_nmap.sh
+        # Verifica o diretório antes
+        ls -la
+        # Executa o script com debug
+        bash -x ./make_nmap.sh
+        # Verifica o diretório depois
+        ls -la
 
     - name: Build Debug APK
       run: |
