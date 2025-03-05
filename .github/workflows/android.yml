@@ -17,7 +17,7 @@ jobs:
     - name: Set up JDK 17 and Android SDK
       uses: android-actions/setup-android@v3
       with:
-        sdk-tools-version: '9477386'  # commandlinetools-linux-9477386_latest.zip
+        sdk-tools-version: '9477386'
 
     - name: Install NDK and accept licenses
       run: |
@@ -30,13 +30,11 @@ jobs:
 
     - name: Compile Nmap
       run: |
-        cd app/src/main/cpp
-        chmod +x make_nmap.sh
-        ./make_nmap.sh
+        chmod +x app/src/main/cpp/make_nmap.sh
+        app/src/main/cpp/make_nmap.sh
 
     - name: Build Debug APK
       run: |
-        cd ../../..
         chmod +x gradlew
         ./gradlew assembleDebug
 
