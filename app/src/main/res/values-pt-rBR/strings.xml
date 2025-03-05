@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Nmap Wrapper</string>
+    <string name="nmap_hint">Ex: nmap --help</string>
+    <string name="main_credits">Nmap Wrapper para Android\nCriado por Werebug (https://werebug.com)\n\nEste é um wrapper ao redor do scanner de rede Nmap, compilado cruzadamente para Android.\nEste não é um aplicativo oficial do Nmap. Para saber mais sobre o Nmap e suas funcionalidades, você pode visitar o site oficial em https://nmap.org.\n\nExemplos:\n\n- Escanear a porta TCP 443 em example.com\n\tnmap -p 443 example.com\n- Escanear as 50 principais portas e capturar banners na sua LAN:\n\tnmap --top-ports 50 -sV 192.168.1.1/24\n\nAlgumas funcionalidades do Nmap requerem privilégios de root. Se você tiver um telefone com root, adicione "sudo" antes dos seus comandos para executá-los como root:\n\tsudo nmap -O example.com\n\nCódigo-fonte, instruções de compilação cruzada e configuração estão disponíveis em https://github.com/ruvolof/anmap-wrapper. Sinta-se à vontade para contribuir ou relatar bugs no Github.</string>
+    <string name="invalid_nmap_syntax">Sintaxe de comando inválida. Exemplo:\nnmap 192.168.1.1</string>
+    <string name="invalid_sudo_syntax">Sintaxe de sudo inválida. Exemplo:\nsudo nmap 192.168.1.1</string>
+    <string name="reserved_nmap_flag_error">A flag %1$s é reservada para o funcionamento correto do Nmap Wrapper para Android.</string>
+    <string name="hostname_label">Nome(s) de host:</string>
+    <string name="ip_address_label">IPv4:</string>
+    <string name="mac_address_label">MAC:</string>
+    <string name="port_label">Porta</string>
+    <string name="port_state_label">Estado</string>
+    <string name="service_label">Nome</string>
+    <string name="service_version_label">Produto/Versão</string>
+    <string name="parse_button_label">Analisar</string>
+    <string name="clear_button_label">Limpar</string>
+    <string name="title_activity_settings">Configurações</string>
+
+    <!-- Preferências -->
+    <string name="experimental_features_header">Funcionalidades Experimentais</string>
+    <string name="xml_parser_preference_title">Analisador XML</string>
+    <string name="xml_parser_preference_summary">Mostra um botão para analisar a saída XML quando o escaneamento terminar.</string>
+
+</resources>
