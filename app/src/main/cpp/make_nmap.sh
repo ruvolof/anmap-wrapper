@@ -5,11 +5,11 @@ set -u
 readonly SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null \
                       && pwd )
 
-readonly NMAP_VERSION='7.95'
+readonly NMAP_VERSION='7.96'
 readonly NMAP_SRC="nmap-${NMAP_VERSION}.tgz"
 readonly NMAP_DOWNLOAD_URL="https://nmap.org/dist/${NMAP_SRC}"
 readonly NMAP_BUILD_DIR="${SCRIPT_DIR}/nmap-${NMAP_VERSION}"
-readonly OPENSSL_VERSION='3.0.14'
+readonly OPENSSL_VERSION='3.0.16'
 readonly OPENSSL_SRC="openssl-${OPENSSL_VERSION}.tar.gz"
 readonly OPENSSL_DOWNLOAD_URL="https://www.openssl.org/source/${OPENSSL_SRC}"
 readonly OPENSSL_BUILD_DIR="${SCRIPT_DIR}/openssl-${OPENSSL_VERSION}"
@@ -82,11 +82,11 @@ function cross_compile_openssl() {
   elif [[ "${target}" == 'armv7a-linux-androideabi' ]]; then
     ./Configure android-arm
   elif [[ "${target}" == 'i686-linux-android' ]]; then
-      ./Configure android-x86
+    ./Configure android-x86
   elif [[ "${target}" == 'x86_64-linux-android' ]]; then
-      ./Configure android-x86_64
+    ./Configure android-x86_64
   fi
-  make
+  make -j
 }
 
 # This function creates the folder OPENSSL_BUILD_DIR/lib, then copies
@@ -98,6 +98,10 @@ function setup_openssl_dir_for_nmap_build() {
   for dep in "${DEPS[@]}"; do
       cp "${dep}" lib/
   done
+}
+
+function patch_nmap_source() {
+  patch "${NMAP_BUILD_DIR}/libdnet-stripped/src/route-linux.c" < route-linux.c.patch
 }
 
 # Cross-compiles nmap for a specified android target.
@@ -145,6 +149,7 @@ function main() {
     )
     (
       prepare_nmap_source
+      patch_nmap_source
       cd "${NMAP_BUILD_DIR}" || exit
       cross_compile_nmap "${target}"
     )

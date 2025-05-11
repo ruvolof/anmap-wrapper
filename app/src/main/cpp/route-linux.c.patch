@@ -1,0 +1,24 @@
+--- nmap-7.96/libdnet-stripped/src/route-linux.c.orig	2025-05-11 11:41:25.012545026 +0200
++++ nmap-7.96/libdnet-stripped/src/route-linux.c	2025-05-11 11:41:55.132147145 +0200
+@@ -124,6 +124,12 @@
+ 	return ret;
+ }
+ 
++static inline int ip6_is_unspecified(const ip6_addr_t *a) {
++    const uint32_t *p = (const uint32_t *)a->data;
++    return p[0] == 0 && p[1] == 0 && p[2] == 0 && p[3] == 0;
++}
++
++
+ int
+ route6_add(route_t *r, const struct route_entry *entry, int intf_index)
+ {
+@@ -146,7 +152,7 @@
+ 
+ 	memcpy(&rt.rtmsg_dst, &dst.addr_ip6, sizeof(rt.rtmsg_dst));
+ 
+-	if (!IN6_IS_ADDR_UNSPECIFIED(&entry->route_gw.addr_ip6)) {
++	if (!ip6_is_unspecified(&entry->route_gw.addr_ip6)) {
+ 		rt.rtmsg_flags |= RTF_GATEWAY;
+ 		memcpy(&rt.rtmsg_gateway, &entry->route_gw.addr_ip6,
+ 				sizeof(rt.rtmsg_gateway));

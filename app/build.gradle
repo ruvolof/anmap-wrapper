@@ -5,7 +5,7 @@ plugins {
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.werebug.anmapwrapper"
