@@ -1,6 +1,5 @@
 package com.werebug.anmapwrapper.parser
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,11 +43,12 @@ class HostAdapter(private val hostList: List<Host>) :
         holder.hostnamesRecyclerView.adapter = HostnameAdapter(host.hostnames.toList())
         holder.servicesRecyclerView.layoutManager = LinearLayoutManager(holder.itemView.context)
         holder.servicesRecyclerView.adapter = ServiceAdapter(host.services)
-        if (position % 2 == 1) {
-            holder.containerConstraintLayout.setBackgroundColor(Color.LTGRAY)
+        val backgroundColorRes = if (position % 2 == 0) {
+            R.color.row_background_even
         } else {
-            holder.containerConstraintLayout.setBackgroundColor(Color.WHITE)
+            R.color.row_background_odd
         }
+        holder.containerConstraintLayout.setBackgroundResource(backgroundColorRes)
     }
 
     override fun getItemCount(): Int = hostList.size
