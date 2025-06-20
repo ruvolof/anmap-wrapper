@@ -39,8 +39,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         libDir = applicationInfo.nativeLibraryDir
         nmapExecutablePath = "$libDir/libnmap.so"
-        binding = ActivityMainBinding.inflate(layoutInflater)
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.scanControlButton.setOnClickListener(this)
         binding.parseOutputButton.setOnClickListener(this)

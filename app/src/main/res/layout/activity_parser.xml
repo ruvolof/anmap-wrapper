@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".parser.ParserActivity">
+    tools:context=".parser.ParserActivity"
+    android:fitsSystemWindows="true">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/host_list_recycler_view"
