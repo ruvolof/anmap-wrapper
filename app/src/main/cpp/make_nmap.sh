@@ -109,6 +109,26 @@ function patch_nmap_source() {
 #   $1 Target (from ANDROID_TARGETS)
 function cross_compile_nmap() {
   export_make_toolchain "$1"
+
+   # === Custom build flags ===
+  export LUA_CFLAGS="-DLUA_USE_POSIX -fvisibility=hidden -fPIE -static -Oz -fPIC \
+  -ffunction-sections -fdata-sections -feliminate-unused-debug-types -Wno-error \
+  -fno-rtti -fno-exceptions -Wall -DNDEBUG -fvisibility-inlines-hidden"
+
+  export CFLAGS="-I${OPENSSL_BUILD_DIR}/include \
+  -fvisibility=hidden -fPIE -static -Oz -fPIC -ffunction-sections -fdata-sections \
+  -feliminate-unused-debug-types -Wno-error -fno-rtti -fno-exceptions -Wall -DNDEBUG \
+  -fvisibility-inlines-hidden"
+
+  export CXXFLAGS="-I${OPENSSL_BUILD_DIR}/include \
+  -fvisibility=hidden -fPIE -static -Oz -fPIC -ffunction-sections -fdata-sections \
+  -feliminate-unused-debug-types -Wno-error -fno-rtti -fno-exceptions -Wall -DNDEBUG \
+  -fvisibility-inlines-hidden"
+
+  export LDFLAGS="-L${OPENSSL_BUILD_DIR}/include \
+  -L${OPENSSL_BUILD_DIR}/lib -fvisibility=hidden \
+  -s -static-libstdc++ -s -pie -Wl,--gc-sections -flto -O3"
+  
   ./configure --host "${TARGET}" \
               --without-ncat \
               --without-nping \
