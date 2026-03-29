@@ -1,0 +1,18 @@
+--- configure.ac	2026-03-16 18:21:51.000000000 +0100
++++ configure.ac.patched	2026-03-29 10:26:24.803404405 +0200
+@@ -202,7 +202,6 @@
+ 	AC_LIBOBJ([eth-dlpi])
+ else
+ 	AC_LIBOBJ([eth-none])
+-	AC_MSG_ERROR("Ethernet support not found for this system.")
+ fi
+ 
+ AC_LIBOBJ([fw-none])
+@@ -234,7 +233,6 @@
+ 	AC_LIBOBJ([route-hpux])
+ else
+ 	AC_LIBOBJ([route-none])
+-	AC_MSG_ERROR("Routing interface not found for this system.")
+ fi
+ 
+ dnl Check for ndisc interface.

@@ -1,0 +1,12 @@
+--- libpcre2-posix.sym.orig	2026-03-29 11:07:57.982959009 +0200
++++ libpcre2-posix.sym	2026-03-29 11:08:06.130189206 +0200
+@@ -5,9 +5,6 @@
+     pcre2_regerror;
+     pcre2_regexec;
+     pcre2_regfree;
+-  local:
+-    _fini;
+-    _init;
+ };
+ 
+ # PCRE2_10.48 {} PCRE2_10.47;

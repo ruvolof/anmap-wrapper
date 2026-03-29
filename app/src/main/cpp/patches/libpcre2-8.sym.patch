@@ -1,0 +1,25 @@
+--- libpcre2-8.sym.orig	2026-03-29 11:02:32.561127080 +0200
++++ libpcre2-8.sym	2026-03-29 11:03:16.579525107 +0200
+@@ -25,12 +25,6 @@
+     pcre2_get_ovector_count_8;
+     pcre2_get_ovector_pointer_8;
+     pcre2_get_startchar_8;
+-    pcre2_jit_compile_8;
+-    pcre2_jit_free_unused_memory_8;
+-    pcre2_jit_match_8;
+-    pcre2_jit_stack_assign_8;
+-    pcre2_jit_stack_create_8;
+-    pcre2_jit_stack_free_8;
+     pcre2_maketables_8;
+     pcre2_maketables_free_8;
+     pcre2_match_8;
+@@ -80,9 +74,6 @@
+     pcre2_substring_list_get_8;
+     pcre2_substring_nametable_scan_8;
+     pcre2_substring_number_from_name_8;
+-  local:
+-    _fini;
+-    _init;
+ };
+ 
+ # PCRE2_10.48 {} PCRE2_10.47;
