@@ -102,7 +102,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun getNmapCommandArguments(): List<String> {
-        val argv = binding.nmapCommandInput.text.toString().trim().split(" ").toMutableList()
+        val argv =
+            binding.nmapCommandInput.text.toString().trim().split(Regex("\\s+")).toMutableList()
         patchBinaryPaths(argv)
         patchReserved(argv, "--datadir", filesDir.toString())
         patchDefault(argv, "--dns-servers", "8.8.8.8")
