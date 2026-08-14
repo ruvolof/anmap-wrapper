@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
       R.id.scan_control_button -> {
         cleanTmpFiles()
         if (isScanning) {
-          currentNmapScan!!.stopScan()
+          currentNmapScan?.stopScan()
           return
         }
         val command = try {
@@ -128,10 +128,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
           return
         }
         Log.d(LOG_TAG, command.toString())
-        currentNmapScan = NmapScan(
-          WeakReference(this), command, mainThreadHandler, libDir
-        )
-        executorService.execute(currentNmapScan)
+        val scan = NmapScan(WeakReference(this), command, mainThreadHandler)
+        currentNmapScan = scan
+        isScanning = true
+        executorService.execute(scan)
       }
 
       R.id.parse_output_button -> {
@@ -147,7 +147,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
   }
 
   fun initScanView() {
-    isScanning = true
     binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause)
     binding.outputTextView.text = ""
     hidePostScanButtons()

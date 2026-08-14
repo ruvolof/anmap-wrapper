@@ -10,8 +10,7 @@ import java.nio.charset.StandardCharsets
 class NmapScan internal constructor(
   private val mainActivityRef: WeakReference<MainActivity>,
   private val command: List<String>,
-  private val mainThreadHandler: Handler,
-  private val libDir: String
+  private val mainThreadHandler: Handler
 ) : Runnable {
   @Volatile
   private var stopped = false
@@ -29,6 +28,7 @@ class NmapScan internal constructor(
       Log.e(MainActivity.LOG_TAG, e.message!!)
       mainThreadHandler.post {
         Toast.makeText(mainActivityRef.get(), e.message, Toast.LENGTH_LONG).show()
+        mainActivityRef.get()?.updateOutputView("", true)
       }
       return
     }
@@ -56,11 +56,11 @@ class NmapScan internal constructor(
     } finally {
       try {
         processStdout.close()
-      } catch (ignored: IOException) {
+      } catch (_: IOException) {
       }
       try {
         startedProcess.waitFor()
-      } catch (e: InterruptedException) {
+      } catch (_: InterruptedException) {
         Thread.currentThread().interrupt()
       }
     }
