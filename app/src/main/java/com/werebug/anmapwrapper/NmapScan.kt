@@ -13,55 +13,61 @@ class NmapScan internal constructor(
   private val mainThreadHandler: Handler,
   private val libDir: String
 ) : Runnable {
-  @Volatile private var stopped = false
+  @Volatile
+  private var stopped = false
+
+  @Volatile
+  private var process: Process? = null
 
   override fun run() {
     val processBuilder = ProcessBuilder(command)
     processBuilder.redirectErrorStream(true)
+    val startedProcess: Process
     try {
-      val process = processBuilder.start()
-      mainThreadHandler.post { mainActivityRef.get()!!.initScanView() }
-      val processStdout = process.inputStream
-      var exited = false
-      while (!exited && !stopped) {
-        val outputByteCount = processStdout.available()
-        if (outputByteCount > 0) {
-          val bytes = ByteArray(outputByteCount)
-          processStdout.read(bytes)
-          mainThreadHandler.post {
-            mainActivityRef.get()?.updateOutputView(
-              String(bytes, StandardCharsets.UTF_8), false
-            )
-          }
-        }
-        if (stopped) {
-          process.destroy()
-        }
-        try {
-          process.exitValue()
-          exited = true
-        } catch (ignored: IllegalThreadStateException) {
-        }
-      }
-      if (stopped) {
-        mainThreadHandler.post {
-          Toast.makeText(
-            mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT
-          ).show()
-        }
-      }
-      mainThreadHandler.post {
-        mainActivityRef.get()?.updateOutputView("", true)
-      }
+      startedProcess = processBuilder.start()
     } catch (e: IOException) {
       Log.e(MainActivity.LOG_TAG, e.message!!)
       mainThreadHandler.post {
         Toast.makeText(mainActivityRef.get(), e.message, Toast.LENGTH_LONG).show()
       }
+      return
+    }
+    process = startedProcess
+    mainThreadHandler.post { mainActivityRef.get()!!.initScanView() }
+    try {
+      val processStdout = startedProcess.inputStream
+      val buffer = ByteArray(4096)
+      while (true) {
+        val bytesRead = processStdout.read(buffer)
+        if (bytesRead <= 0) break
+        mainThreadHandler.post {
+          mainActivityRef.get()?.updateOutputView(
+            String(buffer, 0, bytesRead, StandardCharsets.UTF_8), false
+          )
+        }
+      }
+    } catch (e: IOException) {
+      if (!stopped) {
+        Log.e(MainActivity.LOG_TAG, e.message!!)
+        mainThreadHandler.post {
+          Toast.makeText(mainActivityRef.get(), e.message, Toast.LENGTH_LONG).show()
+        }
+      }
+    }
+    if (stopped) {
+      mainThreadHandler.post {
+        Toast.makeText(
+          mainActivityRef.get(), "Stopped.", Toast.LENGTH_SHORT
+        ).show()
+      }
+    }
+    mainThreadHandler.post {
+      mainActivityRef.get()?.updateOutputView("", true)
     }
   }
 
   fun stopScan() {
     stopped = true
+    process?.destroy()
   }
 }
