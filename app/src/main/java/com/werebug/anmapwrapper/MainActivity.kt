@@ -46,12 +46,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     binding.parseOutputButton.setOnClickListener(this)
     binding.clearOutputButton.setOnClickListener(this)
     executorService.execute(ImportNmapAssets(WeakReference(this)))
-    makeTmpDir()
+    File(filesDir, "tmp").mkdirs()
+    if (savedInstanceState == null) {
+      cleanTmpFiles()
+    }
   }
 
   override fun onDestroy() {
     super.onDestroy()
-    cleanTmpFiles()
+    if (isFinishing) {
+      cleanTmpFiles()
+    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -116,7 +121,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
   override fun onClick(view: View) {
     when (view.id) {
       R.id.scan_control_button -> {
-        cleanTmpFiles()
         if (isScanning) {
           currentNmapScan?.stopScan()
           return
@@ -127,6 +131,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
           Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
           return
         }
+        cleanTmpFiles()
         Log.d(LOG_TAG, command.toString())
         val scan = NmapScan(WeakReference(this), command, mainThreadHandler)
         currentNmapScan = scan
@@ -184,11 +189,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
   private fun startSettingsActivity() {
     val intent = Intent(this, SettingsActivity::class.java)
     startActivity(intent)
-  }
-
-  private fun makeTmpDir() {
-    File(filesDir, "tmp").mkdirs()
-    cleanTmpFiles()
   }
 
   private fun cleanTmpFiles() {
