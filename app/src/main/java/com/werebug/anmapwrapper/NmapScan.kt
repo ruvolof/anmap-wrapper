@@ -13,7 +13,7 @@ class NmapScan internal constructor(
   private val mainThreadHandler: Handler,
   private val libDir: String
 ) : Runnable {
-  private var stopped = false
+  @Volatile private var stopped = false
 
   override fun run() {
     val processBuilder = ProcessBuilder(command)
