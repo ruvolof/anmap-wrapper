@@ -33,7 +33,7 @@ class NmapScan internal constructor(
       return
     }
     process = startedProcess
-    mainThreadHandler.post { mainActivityRef.get()!!.initScanView() }
+    mainThreadHandler.post { mainActivityRef.get()?.initScanView() }
     val processStdout = startedProcess.inputStream
     try {
       val buffer = ByteArray(4096)

@@ -1,8 +1,9 @@
 package com.werebug.anmapwrapper
 
 import android.content.Context
-import android.content.SharedPreferences
+import android.content.res.AssetManager
 import android.util.Log
+import androidx.core.content.edit
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -27,32 +28,44 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
     private val NMAP_FOLDER_ASSETS = arrayOf("scripts", "nselib")
   }
 
-  private val preferences: SharedPreferences =
-    mainActivityRef.get()!!.getPreferences(Context.MODE_PRIVATE)
-  private var lastImportedVersion: String? = null
-
   override fun run() {
-    lastImportedVersion = preferences.getString(ASSET_VERSION_PREFS_KEY, "")
+    val activity = mainActivityRef.get() ?: return
+    val preferences = activity.getPreferences(Context.MODE_PRIVATE)
+    val assets = activity.assets
+    val filesDir = activity.filesDir
+    val lastImportedVersion = preferences.getString(ASSET_VERSION_PREFS_KEY, "")
     for (dataAssetFile in NMAP_FILE_ASSETS) {
-      copyAssetFileToInternalStorage(dataAssetFile, dataAssetFile)
+      copyAssetFileToInternalStorage(
+        assets,
+        filesDir,
+        dataAssetFile,
+        dataAssetFile,
+        lastImportedVersion
+      )
     }
     for (assetFolder in NMAP_FOLDER_ASSETS) {
-      copyAssetDirToInternalStorage(assetFolder, assetFolder)
+      copyAssetDirToInternalStorage(assets, filesDir, assetFolder, assetFolder, lastImportedVersion)
     }
-    val editor = preferences.edit()
-    editor.putString(ASSET_VERSION_PREFS_KEY, ASSET_VERSION)
-    editor.apply()
+    preferences.edit {
+      putString(ASSET_VERSION_PREFS_KEY, ASSET_VERSION)
+    }
   }
 
-  private fun copyAssetFileToInternalStorage(assetPath: String, targetPath: String) {
-    val targetFile = File(mainActivityRef.get()!!.filesDir, targetPath)
+  private fun copyAssetFileToInternalStorage(
+    assets: AssetManager,
+    filesDir: File,
+    assetPath: String,
+    targetPath: String,
+    lastImportedVersion: String?
+  ) {
+    val targetFile = File(filesDir, targetPath)
     if (targetFile.exists() && lastImportedVersion == ASSET_VERSION) {
       return
     }
     var inputStream: InputStream? = null
     var outputStream: OutputStream? = null
     try {
-      inputStream = mainActivityRef.get()!!.assets.open(assetPath)
+      inputStream = assets.open(assetPath)
       outputStream = FileOutputStream(targetFile)
       val buffer = ByteArray(1024)
       var length: Int
@@ -60,7 +73,7 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
         outputStream.write(buffer, 0, length)
       }
       Log.i(MainActivity.LOG_TAG, "$assetPath successfully imported.")
-    } catch (e: IOException) {
+    } catch (_: IOException) {
       Log.e(MainActivity.LOG_TAG, "Error importing $assetPath")
     } finally {
       inputStream?.close()
@@ -69,20 +82,26 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
     }
   }
 
-  private fun copyAssetDirToInternalStorage(assetDir: String, targetDir: String) {
-    val assets = mainActivityRef.get()!!.assets.list(assetDir) ?: return
-    val targetDirectory = File(mainActivityRef.get()!!.filesDir, targetDir)
+  private fun copyAssetDirToInternalStorage(
+    assets: AssetManager,
+    filesDir: File,
+    assetDir: String,
+    targetDir: String,
+    lastImportedVersion: String?
+  ) {
+    val children = assets.list(assetDir) ?: return
+    val targetDirectory = File(filesDir, targetDir)
     if (!targetDirectory.exists()) {
       targetDirectory.mkdirs()
     }
-    for (asset in assets) {
+    for (asset in children) {
       val assetPath = if (assetDir.isEmpty()) asset else "$assetDir/$asset"
       val targetPath = "$targetDir/$asset"
-      if (mainActivityRef.get()!!.assets.list(assetPath)?.isNotEmpty() == true) {
+      if (assets.list(assetPath)?.isNotEmpty() == true) {
         // If the asset is a directory, recurse into it
-        copyAssetDirToInternalStorage(assetPath, targetPath)
+        copyAssetDirToInternalStorage(assets, filesDir, assetPath, targetPath, lastImportedVersion)
       } else {
-        copyAssetFileToInternalStorage(assetPath, targetPath)
+        copyAssetFileToInternalStorage(assets, filesDir, assetPath, targetPath, lastImportedVersion)
       }
     }
   }
