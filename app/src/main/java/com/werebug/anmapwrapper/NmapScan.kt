@@ -34,8 +34,8 @@ class NmapScan internal constructor(
     }
     process = startedProcess
     mainThreadHandler.post { mainActivityRef.get()!!.initScanView() }
+    val processStdout = startedProcess.inputStream
     try {
-      val processStdout = startedProcess.inputStream
       val buffer = ByteArray(4096)
       while (true) {
         val bytesRead = processStdout.read(buffer)
@@ -52,6 +52,16 @@ class NmapScan internal constructor(
         mainThreadHandler.post {
           Toast.makeText(mainActivityRef.get(), e.message, Toast.LENGTH_LONG).show()
         }
+      }
+    } finally {
+      try {
+        processStdout.close()
+      } catch (ignored: IOException) {
+      }
+      try {
+        startedProcess.waitFor()
+      } catch (e: InterruptedException) {
+        Thread.currentThread().interrupt()
       }
     }
     if (stopped) {
