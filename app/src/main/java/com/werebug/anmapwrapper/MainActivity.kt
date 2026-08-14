@@ -9,6 +9,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.HandlerCompat
 import androidx.preference.PreferenceManager
@@ -28,12 +29,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
   private val executorService = Executors.newFixedThreadPool(1)
   private val mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper())
+  private val viewModel: MainViewModel by viewModels()
   private lateinit var binding: ActivityMainBinding
   private lateinit var libDir: String
   private lateinit var nmapExecutablePath: String
   private lateinit var sharedPreferences: SharedPreferences
-  private var isScanning = false
-  private var currentNmapScan: NmapScan? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -45,10 +45,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     binding.scanControlButton.setOnClickListener(this)
     binding.parseOutputButton.setOnClickListener(this)
     binding.clearOutputButton.setOnClickListener(this)
+    viewModel.output.observe(this) { renderOutput() }
+    viewModel.isScanning.observe(this) { scanning ->
+      binding.scanControlButton.setImageResource(
+        if (scanning) android.R.drawable.ic_media_pause else android.R.drawable.ic_menu_send
+      )
+      if (scanning || viewModel.output.value.isNullOrEmpty()) {
+        hidePostScanButtons()
+      } else {
+        showPostScanButtons()
+      }
+      renderOutput()
+    }
     executorService.execute(ImportNmapAssets(WeakReference(this)))
     File(filesDir, "tmp").mkdirs()
     if (savedInstanceState == null) {
       cleanTmpFiles()
+    }
+  }
+
+  private fun renderOutput() {
+    val text = viewModel.output.value.orEmpty()
+    binding.outputTextView.text = when {
+      text.isNotEmpty() -> text
+      viewModel.isScanning.value == true -> ""
+      else -> getString(R.string.main_credits)
     }
   }
 
@@ -122,8 +143,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
   override fun onClick(view: View) {
     when (view.id) {
       R.id.scan_control_button -> {
-        if (isScanning) {
-          currentNmapScan?.stopScan()
+        if (viewModel.isScanning.value == true) {
+          viewModel.currentNmapScan?.stopScan()
           return
         }
         val command = try {
@@ -133,10 +154,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
           return
         }
         cleanTmpFiles()
+        viewModel.clearOutput()
         Log.d(LOG_TAG, command.toString())
         val scan = NmapScan(WeakReference(this), command, mainThreadHandler)
-        currentNmapScan = scan
-        isScanning = true
+        viewModel.currentNmapScan = scan
+        viewModel.setScanning(true)
         executorService.execute(scan)
       }
 
@@ -145,7 +167,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
       }
 
       R.id.clear_output_button -> {
-        binding.outputTextView.text = getString(R.string.main_credits)
+        viewModel.clearOutput()
         cleanTmpFiles()
         hidePostScanButtons()
       }
@@ -153,21 +175,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
   }
 
   fun initScanView() {
-    binding.scanControlButton.setImageResource(android.R.drawable.ic_media_pause)
-    binding.outputTextView.text = ""
-    hidePostScanButtons()
+    // No-op: scan-start UI state is set synchronously on click via the ViewModel.
+    // Kept because NmapScan still posts this callback.
   }
 
   fun updateOutputView(retrievedOutput: String?, finished: Boolean) {
-    if (finished) {
-      isScanning = false
-      currentNmapScan = null
-      binding.scanControlButton.setImageResource(android.R.drawable.ic_menu_send)
-      showPostScanButtons()
+    if (!retrievedOutput.isNullOrEmpty()) {
+      viewModel.appendOutput(retrievedOutput)
     }
-    binding.outputTextView.text = String.format(
-      "%s%s", binding.outputTextView.text, retrievedOutput
-    )
+    if (finished) {
+      viewModel.currentNmapScan = null
+      viewModel.setScanning(false)
+    }
   }
 
   private fun hidePostScanButtons() {
