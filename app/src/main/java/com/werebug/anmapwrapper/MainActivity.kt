@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     if (isFinishing) {
       cleanTmpFiles()
     }
+    executorService.shutdown()
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
