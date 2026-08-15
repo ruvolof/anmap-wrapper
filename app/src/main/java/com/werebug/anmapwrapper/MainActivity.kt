@@ -15,7 +15,6 @@ import androidx.preference.PreferenceManager
 import com.werebug.anmapwrapper.databinding.ActivityMainBinding
 import com.werebug.anmapwrapper.parser.ParserActivity
 import java.io.File
-import java.util.Collections
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -111,47 +110,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
   }
 
-  private fun patchBinaryPaths(argv: MutableList<String>) {
-    val isSudo = argv.indexOf("sudo")
-    if (isSudo > 0) {
-      throw Exception(getString(R.string.invalid_sudo_syntax))
-    }
-    if (isSudo == 0) {
-      argv.removeAt(0)
-      argv.addAll(0, listOf("su", "-c"))
-    }
-    val nmapIndex = argv.indexOf("nmap")
-    if (isSudo == -1 && nmapIndex != 0 || isSudo == 0 && nmapIndex != 2) {
-      throw Exception(getString(R.string.invalid_nmap_syntax))
-    }
-    argv.removeAt(nmapIndex)
-    argv.add(nmapIndex, nmapExecutablePath)
+  private fun buildCommand(): NmapCommandBuilder.Result {
+    val builder = NmapCommandBuilder(
+      nmapExecutablePath = nmapExecutablePath,
+      dataDirPath = filesDir.toString(),
+      xmlOutputPath = if (isParserEnabled()) File(filesDir, XML_OUTPUT_FILE).path else null,
+    )
+    return builder.build(binding.nmapCommandInput.text.toString())
   }
 
-  private fun patchReserved(argv: MutableList<String>, flag: String, value: String) {
-    if (argv.contains(flag)) {
-      throw Exception(getString(R.string.reserved_nmap_flag_error, flag))
+  private fun errorMessage(error: NmapCommandBuilder.Result.Error): String =
+    when (error.kind) {
+      NmapCommandBuilder.ErrorKind.INVALID_SUDO_SYNTAX ->
+        getString(R.string.invalid_sudo_syntax)
+      NmapCommandBuilder.ErrorKind.INVALID_NMAP_SYNTAX ->
+        getString(R.string.invalid_nmap_syntax)
+      NmapCommandBuilder.ErrorKind.RESERVED_FLAG ->
+        getString(R.string.reserved_nmap_flag_error, error.flag)
     }
-    Collections.addAll(argv, flag, value)
-  }
-
-  private fun patchDefault(argv: MutableList<String>, flag: String, value: String) {
-    if (!argv.contains(flag)) {
-      Collections.addAll(argv, flag, value)
-    }
-  }
-
-  private fun getNmapCommandArguments(): List<String> {
-    val argv =
-      binding.nmapCommandInput.text.toString().trim().split(Regex("\\s+")).toMutableList()
-    patchBinaryPaths(argv)
-    patchReserved(argv, "--datadir", filesDir.toString())
-    patchDefault(argv, "--dns-servers", "8.8.8.8")
-    if (isParserEnabled()) {
-      patchReserved(argv, "-oX", File(filesDir, XML_OUTPUT_FILE).path)
-    }
-    return argv
-  }
 
   override fun onClick(view: View) {
     when (view.id) {
@@ -160,11 +136,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
           viewModel.stopScan()
           return
         }
-        val command = try {
-          getNmapCommandArguments()
-        } catch (e: Exception) {
-          Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
-          return
+        val command = when (val result = buildCommand()) {
+          is NmapCommandBuilder.Result.Success -> result.argv
+          is NmapCommandBuilder.Result.Error -> {
+            Toast.makeText(this, errorMessage(result), Toast.LENGTH_LONG).show()
+            return
+          }
         }
         cleanTmpFiles()
         Log.d(LOG_TAG, command.toString())
