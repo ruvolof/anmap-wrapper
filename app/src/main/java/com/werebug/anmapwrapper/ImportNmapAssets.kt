@@ -1,6 +1,6 @@
 package com.werebug.anmapwrapper
 
-import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.AssetManager
 import android.util.Log
 import androidx.core.content.edit
@@ -9,9 +9,12 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.lang.ref.WeakReference
 
-class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>) : Runnable {
+class ImportNmapAssets(
+  private val assets: AssetManager,
+  private val filesDir: File,
+  private val preferences: SharedPreferences
+) : Runnable {
 
   companion object {
     private const val ASSET_VERSION_PREFS_KEY = "last_installed_asset_version"
@@ -29,22 +32,12 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
   }
 
   override fun run() {
-    val activity = mainActivityRef.get() ?: return
-    val preferences = activity.getPreferences(Context.MODE_PRIVATE)
-    val assets = activity.assets
-    val filesDir = activity.filesDir
     val lastImportedVersion = preferences.getString(ASSET_VERSION_PREFS_KEY, "")
     for (dataAssetFile in NMAP_FILE_ASSETS) {
-      copyAssetFileToInternalStorage(
-        assets,
-        filesDir,
-        dataAssetFile,
-        dataAssetFile,
-        lastImportedVersion
-      )
+      copyAssetFileToInternalStorage(dataAssetFile, dataAssetFile, lastImportedVersion)
     }
     for (assetFolder in NMAP_FOLDER_ASSETS) {
-      copyAssetDirToInternalStorage(assets, filesDir, assetFolder, assetFolder, lastImportedVersion)
+      copyAssetDirToInternalStorage(assetFolder, assetFolder, lastImportedVersion)
     }
     preferences.edit {
       putString(ASSET_VERSION_PREFS_KEY, ASSET_VERSION)
@@ -52,8 +45,6 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
   }
 
   private fun copyAssetFileToInternalStorage(
-    assets: AssetManager,
-    filesDir: File,
     assetPath: String,
     targetPath: String,
     lastImportedVersion: String?
@@ -83,8 +74,6 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
   }
 
   private fun copyAssetDirToInternalStorage(
-    assets: AssetManager,
-    filesDir: File,
     assetDir: String,
     targetDir: String,
     lastImportedVersion: String?
@@ -98,13 +87,11 @@ class ImportNmapAssets(private val mainActivityRef: WeakReference<MainActivity>)
       val assetPath = if (assetDir.isEmpty()) asset else "$assetDir/$asset"
       val targetPath = "$targetDir/$asset"
       if (assets.list(assetPath)?.isNotEmpty() == true) {
-        // If the asset is a directory, recurse into it
-        copyAssetDirToInternalStorage(assets, filesDir, assetPath, targetPath, lastImportedVersion)
+        // Directory, recurse into it
+        copyAssetDirToInternalStorage(assetPath, targetPath, lastImportedVersion)
       } else {
-        copyAssetFileToInternalStorage(assets, filesDir, assetPath, targetPath, lastImportedVersion)
+        copyAssetFileToInternalStorage(assetPath, targetPath, lastImportedVersion)
       }
     }
   }
-
-
 }

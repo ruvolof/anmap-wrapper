@@ -3,7 +3,6 @@ package com.werebug.anmapwrapper
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -11,14 +10,11 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.os.HandlerCompat
 import androidx.preference.PreferenceManager
 import com.werebug.anmapwrapper.databinding.ActivityMainBinding
 import com.werebug.anmapwrapper.parser.ParserActivity
 import java.io.File
-import java.lang.ref.WeakReference
 import java.util.Collections
-import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -27,8 +23,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     const val XML_OUTPUT_FILE = "tmp/scan_output.xml"
   }
 
-  private val executorService = Executors.newFixedThreadPool(1)
-  private val mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper())
   private val viewModel: MainViewModel by viewModels()
   private lateinit var binding: ActivityMainBinding
   private lateinit var libDir: String
@@ -57,7 +51,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
       }
       renderOutput()
     }
-    executorService.execute(ImportNmapAssets(WeakReference(this)))
+    viewModel.toastEvent.observe(this) { message ->
+      Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
     File(filesDir, "tmp").mkdirs()
     if (savedInstanceState == null) {
       cleanTmpFiles()
@@ -78,7 +74,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     if (isFinishing) {
       cleanTmpFiles()
     }
-    executorService.shutdown()
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -144,7 +139,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     when (view.id) {
       R.id.scan_control_button -> {
         if (viewModel.isScanning.value == true) {
-          viewModel.currentNmapScan?.stopScan()
+          viewModel.stopScan()
           return
         }
         val command = try {
@@ -154,12 +149,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
           return
         }
         cleanTmpFiles()
-        viewModel.clearOutput()
         Log.d(LOG_TAG, command.toString())
-        val scan = NmapScan(WeakReference(this), command, mainThreadHandler)
-        viewModel.currentNmapScan = scan
-        viewModel.setScanning(true)
-        executorService.execute(scan)
+        viewModel.startScan(command)
       }
 
       R.id.parse_output_button -> {
@@ -171,21 +162,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         cleanTmpFiles()
         hidePostScanButtons()
       }
-    }
-  }
-
-  fun initScanView() {
-    // No-op: scan-start UI state is set synchronously on click via the ViewModel.
-    // Kept because NmapScan still posts this callback.
-  }
-
-  fun updateOutputView(retrievedOutput: String?, finished: Boolean) {
-    if (!retrievedOutput.isNullOrEmpty()) {
-      viewModel.appendOutput(retrievedOutput)
-    }
-    if (finished) {
-      viewModel.currentNmapScan = null
-      viewModel.setScanning(false)
     }
   }
 
