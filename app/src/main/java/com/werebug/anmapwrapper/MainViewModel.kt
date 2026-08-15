@@ -20,8 +20,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app), NmapScan.Listener
   private val mainHandler: Handler = HandlerCompat.createAsync(Looper.getMainLooper())
   private val buffer = StringBuilder()
 
-  private val _output = MutableLiveData("")
-  val output: LiveData<String> = _output
+  private val _outputLen = MutableLiveData(0)
+  val outputLen: LiveData<Int> = _outputLen
+
+  fun outputSnapshot(): String = buffer.toString()
+
+  fun outputTail(from: Int): String =
+    if (from in 0..buffer.length) buffer.substring(from) else buffer.toString()
 
   private val _isScanning = MutableLiveData(false)
   val isScanning: LiveData<Boolean> = _isScanning
@@ -39,7 +44,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), NmapScan.Listener
   fun startScan(command: List<String>) {
     if (_isScanning.value == true) return
     buffer.setLength(0)
-    _output.value = ""
+    _outputLen.value = 0
     _isScanning.value = true
     val scan = NmapScan(command, mainHandler, this)
     currentScan = scan
@@ -52,12 +57,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app), NmapScan.Listener
 
   fun clearOutput() {
     buffer.setLength(0)
-    _output.value = ""
+    _outputLen.value = 0
   }
 
   override fun onChunk(chunk: String) {
     buffer.append(chunk)
-    _output.value = buffer.toString()
+    _outputLen.value = buffer.length
   }
 
   override fun onError(message: String) {

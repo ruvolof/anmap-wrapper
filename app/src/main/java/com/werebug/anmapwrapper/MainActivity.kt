@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -28,6 +29,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
   private lateinit var libDir: String
   private lateinit var nmapExecutablePath: String
   private lateinit var sharedPreferences: SharedPreferences
+  private var displayedLen = 0
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -39,17 +41,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     binding.scanControlButton.setOnClickListener(this)
     binding.parseOutputButton.setOnClickListener(this)
     binding.clearOutputButton.setOnClickListener(this)
-    viewModel.output.observe(this) { renderOutput() }
+    displayedLen = viewModel.outputSnapshot().length
+    syncOutputView()
+    viewModel.outputLen.observe(this) { len ->
+      when {
+        len < displayedLen -> {
+          displayedLen = 0
+          syncOutputView()
+        }
+
+        len > displayedLen -> {
+          binding.outputTextView.editableText.append(viewModel.outputTail(displayedLen))
+          displayedLen = len
+        }
+      }
+    }
     viewModel.isScanning.observe(this) { scanning ->
       binding.scanControlButton.setImageResource(
         if (scanning) android.R.drawable.ic_media_pause else android.R.drawable.ic_menu_send
       )
-      if (scanning || viewModel.output.value.isNullOrEmpty()) {
+      if (scanning || displayedLen == 0) {
         hidePostScanButtons()
       } else {
         showPostScanButtons()
       }
-      renderOutput()
+      syncOutputView()
     }
     viewModel.toastEvent.observe(this) { message ->
       Toast.makeText(this, message, Toast.LENGTH_LONG).show()
@@ -60,13 +76,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
   }
 
-  private fun renderOutput() {
-    val text = viewModel.output.value.orEmpty()
-    binding.outputTextView.text = when {
-      text.isNotEmpty() -> text
-      viewModel.isScanning.value == true -> ""
-      else -> getString(R.string.main_credits)
-    }
+  private fun syncOutputView() {
+    binding.outputTextView.setText(
+      when {
+        displayedLen > 0 -> viewModel.outputSnapshot()
+        viewModel.isScanning.value == true -> ""
+        else -> getString(R.string.main_credits)
+      },
+      TextView.BufferType.EDITABLE
+    )
   }
 
   override fun onDestroy() {
