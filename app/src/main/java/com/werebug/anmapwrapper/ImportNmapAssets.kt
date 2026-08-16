@@ -7,8 +7,6 @@ import androidx.core.content.edit
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 
 class ImportNmapAssets(
   private val assets: AssetManager,
@@ -33,14 +31,23 @@ class ImportNmapAssets(
 
   override fun run() {
     val lastImportedVersion = preferences.getString(ASSET_VERSION_PREFS_KEY, "")
+    var allSucceeded = true
     for (dataAssetFile in NMAP_FILE_ASSETS) {
-      copyAssetFileToInternalStorage(dataAssetFile, dataAssetFile, lastImportedVersion)
+      if (!copyAssetFileToInternalStorage(dataAssetFile, dataAssetFile, lastImportedVersion)) {
+        allSucceeded = false
+      }
     }
     for (assetFolder in NMAP_FOLDER_ASSETS) {
-      copyAssetDirToInternalStorage(assetFolder, assetFolder, lastImportedVersion)
+      if (!copyAssetDirToInternalStorage(assetFolder, assetFolder, lastImportedVersion)) {
+        allSucceeded = false
+      }
     }
-    preferences.edit {
-      putString(ASSET_VERSION_PREFS_KEY, ASSET_VERSION)
+    if (allSucceeded) {
+      preferences.edit {
+        putString(ASSET_VERSION_PREFS_KEY, ASSET_VERSION)
+      }
+    } else {
+      Log.e(MainActivity.LOG_TAG, "Asset import incomplete; version pref not updated")
     }
   }
 
@@ -48,28 +55,22 @@ class ImportNmapAssets(
     assetPath: String,
     targetPath: String,
     lastImportedVersion: String?
-  ) {
+  ): Boolean {
     val targetFile = File(filesDir, targetPath)
     if (targetFile.exists() && lastImportedVersion == ASSET_VERSION) {
-      return
+      return true
     }
-    var inputStream: InputStream? = null
-    var outputStream: OutputStream? = null
-    try {
-      inputStream = assets.open(assetPath)
-      outputStream = FileOutputStream(targetFile)
-      val buffer = ByteArray(1024)
-      var length: Int
-      while (inputStream.read(buffer).also { length = it } > 0) {
-        outputStream.write(buffer, 0, length)
+    return try {
+      assets.open(assetPath).use { input ->
+        FileOutputStream(targetFile).use { output ->
+          input.copyTo(output)
+        }
       }
       Log.i(MainActivity.LOG_TAG, "$assetPath successfully imported.")
-    } catch (_: IOException) {
-      Log.e(MainActivity.LOG_TAG, "Error importing $assetPath")
-    } finally {
-      inputStream?.close()
-      outputStream?.flush()
-      outputStream?.close()
+      true
+    } catch (e: IOException) {
+      Log.e(MainActivity.LOG_TAG, "Error importing $assetPath: ${e.message}")
+      false
     }
   }
 
@@ -77,21 +78,28 @@ class ImportNmapAssets(
     assetDir: String,
     targetDir: String,
     lastImportedVersion: String?
-  ) {
-    val children = assets.list(assetDir) ?: return
-    val targetDirectory = File(filesDir, targetDir)
-    if (!targetDirectory.exists()) {
-      targetDirectory.mkdirs()
+  ): Boolean {
+    val children = assets.list(assetDir)
+    if (children == null) {
+      Log.e(MainActivity.LOG_TAG, "Error listing asset dir $assetDir")
+      return false
     }
+    val targetDirectory = File(filesDir, targetDir)
+    if (!targetDirectory.exists() && !targetDirectory.mkdirs()) {
+      Log.e(MainActivity.LOG_TAG, "Error creating directory ${targetDirectory.path}")
+      return false
+    }
+    var allSucceeded = true
     for (asset in children) {
       val assetPath = if (assetDir.isEmpty()) asset else "$assetDir/$asset"
       val targetPath = "$targetDir/$asset"
-      if (assets.list(assetPath)?.isNotEmpty() == true) {
-        // Directory, recurse into it
+      val ok = if (assets.list(assetPath)?.isNotEmpty() == true) {
         copyAssetDirToInternalStorage(assetPath, targetPath, lastImportedVersion)
       } else {
         copyAssetFileToInternalStorage(assetPath, targetPath, lastImportedVersion)
       }
+      if (!ok) allSucceeded = false
     }
+    return allSucceeded
   }
 }
