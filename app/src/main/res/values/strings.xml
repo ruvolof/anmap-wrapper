@@ -15,6 +15,7 @@
     <string name="parse_button_label">Parse</string>
     <string name="clear_button_label">Clear</string>
     <string name="scan_stopped_toast">Stopped.</string>
+    <string name="no_active_network_error">No active network. Connect to Wi-Fi or cellular before scanning.</string>
     <string name="title_activity_settings">Settings</string>
 
     <!-- Preferences -->

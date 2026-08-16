@@ -6,7 +6,7 @@ class NmapCommandBuilder(
   private val nmapExecutablePath: String,
   private val dataDirPath: String,
   private val xmlOutputPath: String?,
-  private val defaultDnsServers: String = "8.8.8.8",
+  private val defaultDnsServers: List<String>,
 ) {
 
   enum class ErrorKind { INVALID_SUDO_SYNTAX, INVALID_NMAP_SYNTAX, RESERVED_FLAG }
@@ -39,8 +39,8 @@ class NmapCommandBuilder(
     }
     Collections.addAll(argv, "--datadir", dataDirPath)
 
-    if (!containsFlag(argv, "--dns-servers")) {
-      Collections.addAll(argv, "--dns-servers", defaultDnsServers)
+    if (defaultDnsServers.isNotEmpty() && !containsFlag(argv, "--dns-servers")) {
+      Collections.addAll(argv, "--dns-servers", defaultDnsServers.joinToString(","))
     }
 
     if (xmlOutputPath != null) {

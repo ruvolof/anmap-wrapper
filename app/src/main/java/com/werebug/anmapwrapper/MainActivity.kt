@@ -2,6 +2,7 @@ package com.werebug.anmapwrapper
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -110,13 +111,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
   }
 
-  private fun buildCommand(): NmapCommandBuilder.Result {
+  private fun buildCommand(dnsServers: List<String>): NmapCommandBuilder.Result {
     val builder = NmapCommandBuilder(
       nmapExecutablePath = nmapExecutablePath,
       dataDirPath = filesDir.toString(),
       xmlOutputPath = if (isParserEnabled()) File(filesDir, XML_OUTPUT_FILE).path else null,
+      defaultDnsServers = dnsServers,
     )
     return builder.build(binding.nmapCommandInput.text.toString())
+  }
+
+  private fun activeNetworkDnsServers(): List<String>? {
+    val cm = getSystemService(ConnectivityManager::class.java) ?: return null
+    val network = cm.activeNetwork ?: return null
+    val lp = cm.getLinkProperties(network) ?: return null
+    return lp.dnsServers.mapNotNull { it.hostAddress }
   }
 
   private fun errorMessage(error: NmapCommandBuilder.Result.Error): String =
@@ -136,7 +145,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
           viewModel.stopScan()
           return
         }
-        val command = when (val result = buildCommand()) {
+        val dnsServers = activeNetworkDnsServers()
+        if (dnsServers == null) {
+          Toast.makeText(this, R.string.no_active_network_error, Toast.LENGTH_LONG).show()
+          return
+        }
+        val command = when (val result = buildCommand(dnsServers)) {
           is NmapCommandBuilder.Result.Success -> result.argv
           is NmapCommandBuilder.Result.Error -> {
             Toast.makeText(this, errorMessage(result), Toast.LENGTH_LONG).show()
