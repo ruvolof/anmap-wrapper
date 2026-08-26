@@ -11,10 +11,12 @@ class NmapScan(
   private val listener: Listener
 ) : Runnable {
 
+  enum class Outcome { COMPLETED, STOPPED, FAILED }
+
   interface Listener {
     fun onChunk(chunk: String)
     fun onError(message: String)
-    fun onFinished(stoppedByUser: Boolean)
+    fun onFinished(outcome: Outcome)
   }
 
   @Volatile
@@ -34,12 +36,14 @@ class NmapScan(
       Log.e(MainActivity.LOG_TAG, message)
       mainHandler.post {
         listener.onError(message)
-        listener.onFinished(false)
+        listener.onFinished(Outcome.FAILED)
       }
       return
     }
     process = startedProcess
     val processStdout = startedProcess.inputStream
+    var readFailed = false
+    var exitValue = -1
     try {
       val buffer = ByteArray(4096)
       while (true) {
@@ -50,6 +54,7 @@ class NmapScan(
       }
     } catch (e: IOException) {
       if (!stopped) {
+        readFailed = true
         val message = e.message ?: e.toString()
         Log.e(MainActivity.LOG_TAG, message)
         mainHandler.post { listener.onError(message) }
@@ -60,13 +65,17 @@ class NmapScan(
       } catch (_: IOException) {
       }
       try {
-        startedProcess.waitFor()
+        exitValue = startedProcess.waitFor()
       } catch (_: InterruptedException) {
         Thread.currentThread().interrupt()
       }
     }
-    val wasStopped = stopped
-    mainHandler.post { listener.onFinished(wasStopped) }
+    val outcome = when {
+      stopped -> Outcome.STOPPED
+      readFailed || exitValue != 0 -> Outcome.FAILED
+      else -> Outcome.COMPLETED
+    }
+    mainHandler.post { listener.onFinished(outcome) }
   }
 
   fun stopScan() {

@@ -31,6 +31,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app), NmapScan.Listener
   private val _isScanning = MutableLiveData(false)
   val isScanning: LiveData<Boolean> = _isScanning
 
+  private val _lastScanOutcome = MutableLiveData<NmapScan.Outcome?>(null)
+  val lastScanOutcome: LiveData<NmapScan.Outcome?> = _lastScanOutcome
+
   private val _toastEvent = SingleLiveEvent<String>()
   val toastEvent: LiveData<String> = _toastEvent
 
@@ -45,6 +48,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), NmapScan.Listener
     if (_isScanning.value == true) return
     buffer.setLength(0)
     _outputLen.value = 0
+    _lastScanOutcome.value = null
     _isScanning.value = true
     val scan = NmapScan(command, mainHandler, this)
     currentScan = scan
@@ -58,6 +62,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), NmapScan.Listener
   fun clearOutput() {
     buffer.setLength(0)
     _outputLen.value = 0
+    _lastScanOutcome.value = null
   }
 
   override fun onChunk(chunk: String) {
@@ -69,10 +74,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app), NmapScan.Listener
     _toastEvent.value = message
   }
 
-  override fun onFinished(stoppedByUser: Boolean) {
+  override fun onFinished(outcome: NmapScan.Outcome) {
     currentScan = null
+    _lastScanOutcome.value = outcome
     _isScanning.value = false
-    if (stoppedByUser) {
+    if (outcome == NmapScan.Outcome.STOPPED) {
       _toastEvent.value = getApplication<Application>().getString(R.string.scan_stopped_toast)
     }
   }

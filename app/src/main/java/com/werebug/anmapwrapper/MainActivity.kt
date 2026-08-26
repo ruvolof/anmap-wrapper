@@ -181,7 +181,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
   private fun showPostScanButtons() {
     binding.clearOutputButton.visibility = View.VISIBLE
-    if (isParserEnabled() && File(filesDir, XML_OUTPUT_FILE).exists()) {
+    val parsable = viewModel.lastScanOutcome.value == NmapScan.Outcome.COMPLETED &&
+        File(filesDir, XML_OUTPUT_FILE).exists()
+    if (isParserEnabled() && parsable) {
       binding.parseOutputButton.visibility = View.VISIBLE
     }
   }
