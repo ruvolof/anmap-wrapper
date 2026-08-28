@@ -16,7 +16,7 @@ class ImportNmapAssets(
 
   companion object {
     private const val ASSET_VERSION_PREFS_KEY = "last_installed_asset_version"
-    private const val ASSET_VERSION = "7.99"
+    private const val ASSET_VERSION = "7.991"
     private val NMAP_FILE_ASSETS = arrayOf(
       "nmap-service-probes",
       "nmap-services",
