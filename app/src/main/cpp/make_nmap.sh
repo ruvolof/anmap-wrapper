@@ -6,11 +6,11 @@ set -e
 readonly SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null \
                       && pwd )
 
-readonly NMAP_VERSION='7.991'
+readonly NMAP_VERSION='7.992'
 readonly NMAP_SRC="nmap-${NMAP_VERSION}.tgz"
 readonly NMAP_DOWNLOAD_URL="https://nmap.org/dist/${NMAP_SRC}"
 readonly NMAP_BUILD_DIR="${SCRIPT_DIR}/nmap-${NMAP_VERSION}"
-readonly OPENSSL_VERSION='3.5.5'
+readonly OPENSSL_VERSION='3.5.9'
 readonly OPENSSL_SRC="openssl-${OPENSSL_VERSION}.tar.gz"
 readonly OPENSSL_DOWNLOAD_URL="https://www.openssl.org/source/${OPENSSL_SRC}"
 readonly OPENSSL_BUILD_DIR="${SCRIPT_DIR}/openssl-${OPENSSL_VERSION}"
@@ -105,8 +105,7 @@ function setup_openssl_dir_for_nmap_build() {
 
 function patch_nmap_source() {
   patch "${NMAP_BUILD_DIR}/libdnet-stripped/src/route-linux.c" < patches/route-linux.c.patch
-  patch "${NMAP_BUILD_DIR}/libpcre/src/libpcre2-8.sym" < patches/libpcre2-8.sym.patch
-  patch "${NMAP_BUILD_DIR}/libpcre/src/libpcre2-posix.sym" < patches/libpcre2-posix.sym.patch
+  patch "${NMAP_BUILD_DIR}/libpcre/src/libpcre2-8.sym.in" < patches/libpcre2-8.sym.in.patch
 }
 
 # Cross-compiles nmap for a specified android target.
